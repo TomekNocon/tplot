@@ -5,3 +5,6 @@ pub use focal::{pick_focal, FocalChoice, FocalResult, SeriesPoint};
 
 pub mod palette;
 pub use palette::build_palette_map;
+
+pub mod takeaway;
+pub use takeaway::bar_takeaway;
