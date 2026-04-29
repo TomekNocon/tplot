@@ -9,3 +9,6 @@ pub use line::rasterize_line;
 
 pub mod scatter;
 pub use scatter::rasterize_scatter;
+
+pub mod heatmap;
+pub use heatmap::rasterize_heatmap;
