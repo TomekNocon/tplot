@@ -109,7 +109,10 @@ mod tests {
         let parsed = parse_json_str(j).unwrap();
         let df = parsed.dataframe;
         assert_eq!(df.nrows(), 3);
-        assert!(matches!(df.column("y").unwrap().series(), Series::Numbers(_)));
+        assert!(matches!(
+            df.column("y").unwrap().series(),
+            Series::Numbers(_)
+        ));
     }
 
     #[test]

@@ -13,7 +13,9 @@ pub struct ParseColorError(pub String);
 
 impl RgbColor {
     pub fn from_hex(s: &str) -> Result<Self, ParseColorError> {
-        let s = s.strip_prefix('#').ok_or_else(|| ParseColorError(s.to_string()))?;
+        let s = s
+            .strip_prefix('#')
+            .ok_or_else(|| ParseColorError(s.to_string()))?;
         if s.len() != 6 {
             return Err(ParseColorError(s.to_string()));
         }
@@ -31,7 +33,11 @@ impl RgbColor {
             .clamp(0.0, 255.0) as u8;
         // Slightly darker than pure luminance so context recedes.
         let context = (lum as f32 * 0.55).round() as u8;
-        RgbColor { r: context, g: context, b: context }
+        RgbColor {
+            r: context,
+            g: context,
+            b: context,
+        }
     }
 }
 
@@ -42,7 +48,14 @@ mod tests {
     #[test]
     fn parses_hex() {
         let c = RgbColor::from_hex("#ee7b3d").unwrap();
-        assert_eq!(c, RgbColor { r: 0xee, g: 0x7b, b: 0x3d });
+        assert_eq!(
+            c,
+            RgbColor {
+                r: 0xee,
+                g: 0x7b,
+                b: 0x3d
+            }
+        );
     }
 
     #[test]
@@ -53,7 +66,11 @@ mod tests {
 
     #[test]
     fn desaturates_to_grayscale() {
-        let orange = RgbColor { r: 0xee, g: 0x7b, b: 0x3d };
+        let orange = RgbColor {
+            r: 0xee,
+            g: 0x7b,
+            b: 0x3d,
+        };
         let gray = orange.desaturated();
         // BT.601 luminance check
         assert_eq!(gray.r, gray.g);

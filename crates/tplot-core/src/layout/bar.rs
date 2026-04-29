@@ -80,7 +80,12 @@ pub fn layout_horizontal_bar(
 
     // Margins live OUTSIDE the buffer. The composer prepends the label and
     // appends the value to each rendered cell row.
-    let label_margin = agg.iter().map(|(l, _)| l.chars().count()).max().unwrap_or(0) + 2;
+    let label_margin = agg
+        .iter()
+        .map(|(l, _)| l.chars().count())
+        .max()
+        .unwrap_or(0)
+        + 2;
     let value_margin = 8;
     let plot_cells_w = canvas_cells_w
         .saturating_sub(label_margin + value_margin)
@@ -160,8 +165,7 @@ mod tests {
 
     #[test]
     fn produces_one_bar_per_row() {
-        let layout =
-            layout_horizontal_bar(&small_df(), "region", "revenue", None, 80, 12).unwrap();
+        let layout = layout_horizontal_bar(&small_df(), "region", "revenue", None, 80, 12).unwrap();
         assert_eq!(layout.bars.len(), 4);
         // Each bar spans both sub-pixel rows of its cell row → full block.
         for bar in &layout.bars {
@@ -171,8 +175,7 @@ mod tests {
 
     #[test]
     fn longest_bar_uses_most_of_plot_width() {
-        let layout =
-            layout_horizontal_bar(&small_df(), "region", "revenue", None, 80, 12).unwrap();
+        let layout = layout_horizontal_bar(&small_df(), "region", "revenue", None, 80, 12).unwrap();
         let max_bar = layout.bars.iter().max_by_key(|b| b.pixel_width).unwrap();
         // The 72 (EMEA) bar should be the widest.
         assert_eq!(max_bar.label, "EMEA");
@@ -182,8 +185,7 @@ mod tests {
 
     #[test]
     fn shortest_bar_is_proportional() {
-        let layout =
-            layout_horizontal_bar(&small_df(), "region", "revenue", None, 80, 12).unwrap();
+        let layout = layout_horizontal_bar(&small_df(), "region", "revenue", None, 80, 12).unwrap();
         let min_bar = layout.bars.iter().min_by_key(|b| b.pixel_width).unwrap();
         let max_bar = layout.bars.iter().max_by_key(|b| b.pixel_width).unwrap();
         // 21/72 ≈ 0.29
@@ -193,8 +195,7 @@ mod tests {
 
     #[test]
     fn label_margin_accommodates_longest_label() {
-        let layout =
-            layout_horizontal_bar(&small_df(), "region", "revenue", None, 80, 12).unwrap();
+        let layout = layout_horizontal_bar(&small_df(), "region", "revenue", None, 80, 12).unwrap();
         // "LATAM" is 5 chars + 2 cells of padding.
         assert_eq!(layout.label_margin, 7);
     }

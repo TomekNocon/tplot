@@ -48,14 +48,7 @@ impl PixelBuffer {
         self.pixels[y * self.width + x] = Some(color);
     }
 
-    pub fn fill_rect(
-        &mut self,
-        x0: usize,
-        y0: usize,
-        x1: usize,
-        y1: usize,
-        color: RgbColor,
-    ) {
+    pub fn fill_rect(&mut self, x0: usize, y0: usize, x1: usize, y1: usize, color: RgbColor) {
         let x_lo = x0.min(x1);
         let x_hi = x0.max(x1).min(self.width.saturating_sub(1));
         let y_lo = y0.min(y1);

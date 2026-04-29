@@ -1,26 +1,26 @@
 use crate::pipeline::detected_terminal_size;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
+use tplot_core::PixelBuffer;
 use tplot_core::dataframe::{Column, DataFrame, Series};
 use tplot_core::layout::layout_horizontal_bar;
 use tplot_core::rasterize::rasterize_bar;
-use tplot_core::PixelBuffer;
-use tplot_render::render_halfblocks;
 use tplot_protocol::{Capabilities, FocusMode, Palette, StoryConfig};
-use tplot_story::{run_bar_story_pass, SeriesPoint};
+use tplot_render::render_halfblocks;
+use tplot_story::{SeriesPoint, run_bar_story_pass};
 
 #[derive(Debug, Clone)]
 pub struct RenderOptions {
-    pub x:            String,
-    pub y:            String,
-    pub group:        Option<String>,
-    pub vertical:     bool,
-    pub focus:        Option<String>,
-    pub annotate:     Option<String>,
-    pub neutral:      bool,
-    pub no_takeaway:  bool,
-    pub width:        Option<usize>,
+    pub x: String,
+    pub y: String,
+    pub group: Option<String>,
+    pub vertical: bool,
+    pub focus: Option<String>,
+    pub annotate: Option<String>,
+    pub neutral: bool,
+    pub no_takeaway: bool,
+    pub width: Option<usize>,
     /// Used directly in tests; in production callers pass the detected height.
-    pub height:       usize,
+    pub height: usize,
     pub palette_name: String,
 }
 
@@ -31,14 +31,18 @@ pub fn render_bar(df: &DataFrame, opts: &RenderOptions) -> Result<String> {
 
     // ----- aggregate -------------------------------------------------------
     let group_col = opts.group.as_deref().unwrap_or(&opts.x);
-    let labels: Vec<String> = match df.column(group_col)
-        .map_err(|e| anyhow!(e.to_string()))?.series()
+    let labels: Vec<String> = match df
+        .column(group_col)
+        .map_err(|e| anyhow!(e.to_string()))?
+        .series()
     {
         Series::Strings(v) => v.clone(),
         Series::Numbers(v) => v.iter().map(|n| format!("{n}")).collect(),
     };
-    let values: Vec<f64> = match df.column(&opts.y)
-        .map_err(|e| anyhow!(e.to_string()))?.series()
+    let values: Vec<f64> = match df
+        .column(&opts.y)
+        .map_err(|e| anyhow!(e.to_string()))?
+        .series()
     {
         Series::Numbers(v) => v.clone(),
         Series::Strings(_) => return Err(anyhow!("y column `{}` must be numeric", opts.y)),
@@ -49,13 +53,15 @@ pub fn render_bar(df: &DataFrame, opts: &RenderOptions) -> Result<String> {
         if let Some(p) = series_points.iter_mut().find(|p| p.key == *l) {
             p.value += v;
         } else {
-            series_points.push(SeriesPoint { key: l.clone(), value: *v });
+            series_points.push(SeriesPoint {
+                key: l.clone(),
+                value: *v,
+            });
         }
     }
 
     // ----- story-pass ------------------------------------------------------
-    let palette = Palette::from_name(&opts.palette_name)
-        .map_err(|e| anyhow!(e.to_string()))?;
+    let palette = Palette::from_name(&opts.palette_name).map_err(|e| anyhow!(e.to_string()))?;
     let story_cfg = StoryConfig {
         enabled: !opts.neutral,
         takeaway: !opts.no_takeaway,
@@ -69,12 +75,19 @@ pub fn render_bar(df: &DataFrame, opts: &RenderOptions) -> Result<String> {
 
     // ----- layout ----------------------------------------------------------
     let (canvas_w, _) = detected_terminal_size(opts.width);
-    let canvas_h      = opts.height;
+    let canvas_h = opts.height;
 
     let agg_df = DataFrame::from_columns(vec![
-        Column::new("__label__", Series::Strings(series_points.iter().map(|p| p.key.clone()).collect())),
-        Column::new("__value__", Series::Numbers(series_points.iter().map(|p| p.value).collect())),
-    ]).map_err(|e| anyhow!(e.to_string()))?;
+        Column::new(
+            "__label__",
+            Series::Strings(series_points.iter().map(|p| p.key.clone()).collect()),
+        ),
+        Column::new(
+            "__value__",
+            Series::Numbers(series_points.iter().map(|p| p.value).collect()),
+        ),
+    ])
+    .map_err(|e| anyhow!(e.to_string()))?;
     let layout = layout_horizontal_bar(&agg_df, "__label__", "__value__", None, canvas_w, canvas_h)
         .map_err(|e| anyhow!(e.to_string()))?;
 
@@ -99,14 +112,18 @@ pub fn render_bar(df: &DataFrame, opts: &RenderOptions) -> Result<String> {
         // Find the bar whose top cell row matches this row.
         let top_bar = layout.bars.iter().find(|b| (b.pixel_y / 2) == i);
         let any_bar = layout.bars.iter().find(|b| {
-            let top    = b.pixel_y / 2;
+            let top = b.pixel_y / 2;
             let bottom = (b.pixel_y + b.pixel_height.saturating_sub(1)) / 2;
             i >= top && i <= bottom
         });
 
         if let Some(bar) = top_bar {
             // First (top) row of this bar: full ornament.
-            out.push_str(&format!("{:>w$}  ", bar.label, w = label_margin.saturating_sub(2)));
+            out.push_str(&format!(
+                "{:>w$}  ",
+                bar.label,
+                w = label_margin.saturating_sub(2)
+            ));
             out.push_str(line);
             out.push_str(&format!("  {:.0}", bar.value));
         } else if any_bar.is_some() {
@@ -158,8 +175,10 @@ mod tests {
         };
         let out = render_bar(&df, &opts).unwrap();
         // Should contain at least one truecolor escape and the takeaway.
-        assert!(out.contains("\x1b[38;2;238;123;61m"),
-            "missing focal color escape: {out:?}");
+        assert!(
+            out.contains("\x1b[38;2;238;123;61m"),
+            "missing focal color escape: {out:?}"
+        );
         assert!(out.contains("EMEA"));
     }
 

@@ -5,7 +5,7 @@ use tplot_protocol::{Capabilities, RgbColor};
 
 const UPPER: char = '\u{2580}'; // ▀
 const LOWER: char = '\u{2584}'; // ▄
-const FULL:  char = '\u{2588}'; // █
+const FULL: char = '\u{2588}'; // █
 
 pub fn render_halfblocks(buf: &PixelBuffer, caps: Capabilities) -> String {
     let cells_w = buf.cell_width();
@@ -26,11 +26,15 @@ pub fn render_halfblocks(buf: &PixelBuffer, caps: Capabilities) -> String {
                     write!(out, "{}{}{}", fg(t, caps.color_depth), FULL, reset()).unwrap();
                 }
                 (Some(t), Some(b)) => {
-                    write!(out, "{}{}{}{}",
+                    write!(
+                        out,
+                        "{}{}{}{}",
                         fg(t, caps.color_depth),
                         bg(b, caps.color_depth),
                         UPPER,
-                        reset()).unwrap();
+                        reset()
+                    )
+                    .unwrap();
                 }
                 (Some(t), None) => {
                     write!(out, "{}{}{}", fg(t, caps.color_depth), UPPER, reset()).unwrap();
@@ -54,7 +58,11 @@ mod tests {
     use tplot_core::PixelBuffer;
     use tplot_protocol::{Capabilities, ColorDepth, GlyphSet, GraphicsProtocol, RgbColor};
 
-    const ORANGE: RgbColor = RgbColor { r: 0xee, g: 0x7b, b: 0x3d };
+    const ORANGE: RgbColor = RgbColor {
+        r: 0xee,
+        g: 0x7b,
+        b: 0x3d,
+    };
 
     fn caps() -> Capabilities {
         Capabilities {

@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::story::StoryConfig;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
@@ -52,7 +52,9 @@ mod tests {
     #[test]
     fn bar_spec_round_trip_json() {
         let spec = ChartSpec {
-            kind: ChartKind::Bar { orientation: BarOrientation::Horizontal },
+            kind: ChartKind::Bar {
+                orientation: BarOrientation::Horizontal,
+            },
             x: Axis::Column("quarter".into()),
             y: Axis::Column("revenue".into()),
             group: Some("region".into()),

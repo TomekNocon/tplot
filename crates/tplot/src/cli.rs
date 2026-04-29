@@ -2,10 +2,10 @@ use clap::{Args, Parser, Subcommand};
 
 #[derive(Parser, Debug)]
 #[command(
-    name    = "tplot",
+    name = "tplot",
     version,
-    about   = "Storytelling-first chart engine for the terminal",
-    arg_required_else_help = true,
+    about = "Storytelling-first chart engine for the terminal",
+    arg_required_else_help = true
 )]
 pub struct Cli {
     #[command(subcommand)]
@@ -70,10 +70,15 @@ mod tests {
     #[test]
     fn parses_bar_with_xy() {
         let args = Cli::parse_from([
-            "tplot", "bar", "sales.csv",
-            "-x", "quarter",
-            "-y", "revenue",
-            "--group", "region",
+            "tplot",
+            "bar",
+            "sales.csv",
+            "-x",
+            "quarter",
+            "-y",
+            "revenue",
+            "--group",
+            "region",
         ]);
         match args.command {
             Command::Bar(b) => {
@@ -89,7 +94,14 @@ mod tests {
     #[test]
     fn neutral_flag_propagates() {
         let args = Cli::parse_from([
-            "tplot", "bar", "sales.csv", "-x", "q", "-y", "r", "--neutral",
+            "tplot",
+            "bar",
+            "sales.csv",
+            "-x",
+            "q",
+            "-y",
+            "r",
+            "--neutral",
         ]);
         match args.command {
             Command::Bar(b) => assert!(b.common.neutral),

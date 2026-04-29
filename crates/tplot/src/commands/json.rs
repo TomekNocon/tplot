@@ -1,41 +1,50 @@
-use crate::commands::{render_bar, RenderOptions};
-use anyhow::{anyhow, Result};
+use crate::commands::{RenderOptions, render_bar};
+use anyhow::{Result, anyhow};
 use tplot_core::input::parse_json_str;
 use tplot_protocol::{Axis, BarOrientation, ChartKind};
 
 pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<String> {
     let parsed = parse_json_str(json).map_err(|e| anyhow!(e.to_string()))?;
-    let spec = parsed.spec.ok_or_else(|| anyhow!("missing chart spec in JSON"))?;
+    let spec = parsed
+        .spec
+        .ok_or_else(|| anyhow!("missing chart spec in JSON"))?;
     match spec.kind {
-        ChartKind::Bar { orientation: BarOrientation::Horizontal } => {
+        ChartKind::Bar {
+            orientation: BarOrientation::Horizontal,
+        } => {
             let x = match spec.x {
                 Axis::Column(c) => c,
-                _ => return Err(anyhow!("inline x axis not supported in v1; pass via `data` columns")),
+                _ => {
+                    return Err(anyhow!(
+                        "inline x axis not supported in v1; pass via `data` columns"
+                    ));
+                }
             };
             let y = match spec.y {
                 Axis::Column(c) => c,
                 _ => return Err(anyhow!("inline y axis not supported in v1")),
             };
             let opts = RenderOptions {
-                x, y,
-                group:        spec.group,
-                vertical:     false,
-                focus:        match spec.story.focus {
+                x,
+                y,
+                group: spec.group,
+                vertical: false,
+                focus: match spec.story.focus {
                     tplot_protocol::FocusMode::Series(s) => Some(s),
                     _ => None,
                 },
-                annotate:     spec.story.annotation,
-                neutral:      !spec.story.enabled,
-                no_takeaway:  !spec.story.takeaway,
-                width:        Some(canvas_w),
-                height:       canvas_h,
+                annotate: spec.story.annotation,
+                neutral: !spec.story.enabled,
+                no_takeaway: !spec.story.takeaway,
+                width: Some(canvas_w),
+                height: canvas_h,
                 palette_name: "signature".into(),
             };
             render_bar(&parsed.dataframe, &opts)
         }
-        ChartKind::Bar { orientation: BarOrientation::Vertical } => {
-            Err(anyhow!("vertical bars land in plan 2"))
-        }
+        ChartKind::Bar {
+            orientation: BarOrientation::Vertical,
+        } => Err(anyhow!("vertical bars land in plan 2")),
     }
 }
 

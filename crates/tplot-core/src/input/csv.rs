@@ -41,10 +41,8 @@ pub fn parse_csv_reader<R: Read>(r: R) -> Result<DataFrame, CsvError> {
         .into_iter()
         .zip(raw)
         .map(|(name, vals)| {
-            let parsed: Option<Vec<f64>> = vals
-                .iter()
-                .map(|v| v.trim().parse::<f64>().ok())
-                .collect();
+            let parsed: Option<Vec<f64>> =
+                vals.iter().map(|v| v.trim().parse::<f64>().ok()).collect();
             let series = match parsed {
                 Some(numbers) if !numbers.is_empty() => Series::Numbers(numbers),
                 _ => Series::Strings(vals),
@@ -66,16 +64,28 @@ mod tests {
         let csv = "a,b\n1,foo\n2,bar\n3,baz\n";
         let df = parse_csv_str(csv).unwrap();
         assert_eq!(df.nrows(), 3);
-        assert!(matches!(df.column("a").unwrap().series(), Series::Numbers(_)));
-        assert!(matches!(df.column("b").unwrap().series(), Series::Strings(_)));
+        assert!(matches!(
+            df.column("a").unwrap().series(),
+            Series::Numbers(_)
+        ));
+        assert!(matches!(
+            df.column("b").unwrap().series(),
+            Series::Strings(_)
+        ));
     }
 
     #[test]
     fn promotes_numeric_columns_when_all_rows_parse() {
         let csv = "x,y\nQ1,1\nQ2,2\nQ3,3\n";
         let df = parse_csv_str(csv).unwrap();
-        assert!(matches!(df.column("x").unwrap().series(), Series::Strings(_)));
-        assert!(matches!(df.column("y").unwrap().series(), Series::Numbers(_)));
+        assert!(matches!(
+            df.column("x").unwrap().series(),
+            Series::Strings(_)
+        ));
+        assert!(matches!(
+            df.column("y").unwrap().series(),
+            Series::Numbers(_)
+        ));
     }
 
     #[test]

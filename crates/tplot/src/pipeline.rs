@@ -6,7 +6,10 @@
 //! the I/O scaffolding.
 use anyhow::Result;
 use std::io::{self, Read};
-use tplot_core::{dataframe::DataFrame, input::{parse_csv_str, parse_json_str}};
+use tplot_core::{
+    dataframe::DataFrame,
+    input::{parse_csv_str, parse_json_str},
+};
 
 pub fn read_dataframe(path: &str) -> Result<DataFrame> {
     let raw = if path == "-" {

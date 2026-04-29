@@ -10,7 +10,9 @@ pub enum FocusMode {
 
 #[allow(clippy::derivable_impls)]
 impl Default for FocusMode {
-    fn default() -> Self { FocusMode::Auto }
+    fn default() -> Self {
+        FocusMode::Auto
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

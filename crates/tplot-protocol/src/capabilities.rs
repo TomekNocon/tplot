@@ -82,7 +82,11 @@ impl Capabilities {
             GraphicsProtocol::None
         };
 
-        Self { color_depth, glyph_set, graphics_protocol }
+        Self {
+            color_depth,
+            glyph_set,
+            graphics_protocol,
+        }
     }
 }
 
@@ -102,8 +106,8 @@ mod tests {
     fn detects_truecolor_from_env() {
         let c = Capabilities::from_vars(|name| match name {
             "COLORTERM" => Some("truecolor".into()),
-            "TERM"      => Some("xterm-256color".into()),
-            _           => None,
+            "TERM" => Some("xterm-256color".into()),
+            _ => None,
         });
         assert_eq!(c.color_depth, ColorDepth::Truecolor);
     }
@@ -111,9 +115,9 @@ mod tests {
     #[test]
     fn detects_kitty_graphics() {
         let c = Capabilities::from_vars(|name| match name {
-            "TERM"         => Some("xterm-kitty".into()),
-            "COLORTERM"    => Some("truecolor".into()),
-            _              => None,
+            "TERM" => Some("xterm-kitty".into()),
+            "COLORTERM" => Some("truecolor".into()),
+            _ => None,
         });
         assert_eq!(c.graphics_protocol, GraphicsProtocol::Kitty);
     }
