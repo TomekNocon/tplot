@@ -26,6 +26,9 @@ pub enum Command {
     Spark(SparkArgs),
     /// Render a 2D heatmap from long-form (x, y, value) data.
     Heatmap(HeatmapArgs),
+    /// Render a vertical box plot — one column per group of the `x` column,
+    /// 5-number summary of the `y` column.
+    Box(BoxArgs),
     /// Read a JSON ChartSpec from stdin and render it.
     Json,
 }
@@ -129,6 +132,20 @@ pub struct HeatmapArgs {
     /// Heat ramp: inferno (default) | viridis | coolwarm.
     #[arg(long, default_value = "inferno")]
     pub ramp: String,
+    #[command(flatten)]
+    pub common: CommonStoryArgs,
+}
+
+#[derive(Args, Debug)]
+pub struct BoxArgs {
+    /// Path to CSV or JSON input. Use `-` for stdin.
+    pub input: String,
+    /// Categorical column for grouping (one box per unique value).
+    #[arg(short = 'x')]
+    pub x: String,
+    /// Numeric column for the value distribution.
+    #[arg(short = 'y')]
+    pub y: String,
     #[command(flatten)]
     pub common: CommonStoryArgs,
 }
@@ -291,6 +308,27 @@ mod tests {
                 assert_eq!(h.ramp, "viridis");
             }
             _ => panic!("expected Heatmap"),
+        }
+    }
+
+    #[test]
+    fn parses_box_subcommand() {
+        let args = Cli::parse_from([
+            "tplot",
+            "box",
+            "metrics.csv",
+            "-x",
+            "endpoint",
+            "-y",
+            "latency_ms",
+        ]);
+        match args.command {
+            Command::Box(b) => {
+                assert_eq!(b.input, "metrics.csv");
+                assert_eq!(b.x, "endpoint");
+                assert_eq!(b.y, "latency_ms");
+            }
+            _ => panic!("expected Box"),
         }
     }
 

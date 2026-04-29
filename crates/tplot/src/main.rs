@@ -137,6 +137,7 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
+        Command::Box(_) => unimplemented!("box subcommand wiring lands in plan 5 task 8"),
         Command::Json => {
             use std::io::Read;
             let mut buf = String::new();
