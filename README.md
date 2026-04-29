@@ -4,17 +4,17 @@ Storytelling-first chart engine for the terminal — Rust, fast, opinionated by 
 
 > *"Plotly's quality, Cole Knaflic's discipline, in your terminal."*
 
-## What's in this version (Plans 1 + 2 + 3)
+## What's in this version (Plans 1 + 2 + 3 + 4)
 
-- Five chart types: horizontal bar, vertical bar, histogram, line, scatter.
+- Six chart types: horizontal bar, vertical bar, histogram, line, scatter, sparkline.
 - Renderers:
   - half-blocks (truecolor + 256/16/mono fallback) for horizontal bars
-  - vertical-block elements `▁▂▃▄▅▆▇█` for vertical bars and histograms
+  - vertical-block elements `▁▂▃▄▅▆▇█` for vertical bars, histograms, and sparklines
   - Braille (2×4 dots/cell) for line and scatter
-- Story-pass with chart-specific focal detection (max-value for bars, modal-bin for histograms, largest-delta for lines, point-count for scatter), gray-down palette, and embedded takeaway lines. Trust-score gate refuses to highlight when no series clearly dominates.
-- CLI: `tplot bar [--vertical]`, `tplot hist`, `tplot line`, `tplot scatter`, `tplot json` (stdin).
+- Story-pass with chart-specific focal detection (max-value for bars, modal-bin for histograms, largest-delta for lines, point-count for scatter), gray-down palette, and embedded takeaway lines. Trust-score gate refuses to highlight when no series clearly dominates. Sparklines stay deliberately minimal — single colored line, no story overhead.
+- CLI: `tplot bar [--vertical]`, `tplot hist`, `tplot line`, `tplot scatter`, `tplot spark`, `tplot json` (stdin).
 
-Stacked area, sparkline, heatmap, box plot arrive in Plan 4. `--graphics` image-protocol output and full capability detection in Plan 5.
+Heatmap, stacked area, box plot arrive in later plans. `--graphics` image-protocol output and full capability detection ship after that.
 
 ## Install
 
@@ -49,6 +49,17 @@ echo "t,v,g
 2,30,B
 3,80,B
 4,200,B" | tplot line - -x t -y v --group g
+```
+
+```bash
+# Inline sparkline — perfect for piping into scripts
+echo "1 3 2 5 4 7 9 8 10 6" | tplot spark -
+```
+
+Sparklines accept whitespace-separated numbers OR a CSV column via `-y`:
+```bash
+ps -A -o %cpu= | head -20 | tplot spark -    # CPU% per process
+tplot spark metrics.csv -y latency_ms        # column from a CSV
 ```
 
 ## Flags
