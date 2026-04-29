@@ -9,3 +9,6 @@ pub use histogram::{HistogramError, HistogramLayout, layout_histogram};
 
 pub mod line;
 pub use line::{LineLayout, LineLayoutError, LineSeries, layout_line};
+
+pub mod scatter;
+pub use scatter::{ScatterLayout, ScatterLayoutError, ScatterSeries, layout_scatter};
