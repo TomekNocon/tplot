@@ -15,6 +15,7 @@ pub enum ChartKind {
     },
     Line,
     Scatter,
+    Sparkline,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -97,6 +98,20 @@ mod tests {
             x: Axis::Column("time".into()),
             y: Axis::Column("value".into()),
             group: Some("series".into()),
+            title: None,
+            story: StoryConfig::default(),
+        };
+        let json = serde_json::to_string(&spec).unwrap();
+        assert_eq!(serde_json::from_str::<ChartSpec>(&json).unwrap(), spec);
+    }
+
+    #[test]
+    fn sparkline_spec_round_trip() {
+        let spec = ChartSpec {
+            kind: ChartKind::Sparkline,
+            x: Axis::Column("__index__".into()),
+            y: Axis::Column("value".into()),
+            group: None,
             title: None,
             story: StoryConfig::default(),
         };
