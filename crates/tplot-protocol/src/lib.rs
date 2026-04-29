@@ -8,3 +8,8 @@ pub use palette::Palette;
 
 pub mod capabilities;
 pub use capabilities::{Capabilities, ColorDepth, GlyphSet, GraphicsProtocol};
+
+pub mod chart;
+pub mod story;
+pub use chart::{Axis, BarOrientation, ChartKind, ChartSpec};
+pub use story::{FocusMode, StoryConfig};
