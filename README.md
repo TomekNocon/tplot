@@ -4,14 +4,14 @@ Storytelling-first chart engine for the terminal — Rust, fast, opinionated by 
 
 > *"Plotly's quality, Cole Knaflic's discipline, in your terminal."*
 
-## What's in this version (Plan 1)
+## What's in this version (Plan 1 + 2)
 
-- One chart type: horizontal bar.
-- Half-blocks renderer (truecolor + 256/16/mono fallback).
-- Story-pass: focal-series detection, gray-down palette, embedded takeaway line.
-- CLI form (`tplot bar file.csv -x col -y col --group col`) and JSON form (`cat spec.json | tplot json`).
+- Three chart types: horizontal bar, vertical bar, histogram.
+- Renderers: half-blocks (truecolor + 256/16/mono fallback) for horizontal bars; vertical-block elements (`▁▂▃▄▅▆▇█`) for vertical bars and histograms.
+- Story-pass: focal-series detection, gray-down palette, embedded takeaway line. Histograms get a modal-bin treatment with a "Most observations clustered in …" takeaway.
+- CLI: `tplot bar [--vertical] FILE -x col -y col --group col`, `tplot hist FILE -x col [--bins N]`, `tplot json` (stdin).
 
-Vertical bars, line charts, scatter, area, histograms, sparklines, heatmaps, and box plots arrive in subsequent plans.
+Line / scatter / area / sparkline / heatmap / box plot arrive in subsequent plans.
 
 ## Install
 
@@ -28,6 +28,11 @@ EMEA,193
 LATAM,78
 APAC,97
 AU,53" | tplot bar - -x region -y revenue
+```
+
+```bash
+# Histogram of latency values
+echo "ms"; seq 1 200 | awk '{print int(50 + 30*sin($1/8) + 30*(rand()-0.5))}' | tplot hist - -x ms
 ```
 
 ## Flags

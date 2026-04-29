@@ -260,7 +260,10 @@ fn render_vertical_bar(df: &DataFrame, opts: &RenderOptions) -> Result<String> {
             layout.bar_cell_width
         };
         let trimmed: String = bar.label.chars().take(max_label_w).collect();
-        let pad_left = layout.bar_cell_width.saturating_sub(trimmed.chars().count()) / 2;
+        let pad_left = layout
+            .bar_cell_width
+            .saturating_sub(trimmed.chars().count())
+            / 2;
         let pad_right = layout
             .bar_cell_width
             .saturating_sub(trimmed.chars().count() + pad_left);

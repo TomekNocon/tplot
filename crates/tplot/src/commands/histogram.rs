@@ -133,7 +133,8 @@ mod tests {
     #[test]
     fn renders_histogram_with_focal_modal_bin() {
         // Synthetic latency data: clear peak in 40-60ms range.
-        let csv = "ms\n10\n22\n35\n41\n48\n49\n50\n50\n51\n52\n55\n58\n60\n65\n80\n95\n110\n145\n220\n";
+        let csv =
+            "ms\n10\n22\n35\n41\n48\n49\n50\n50\n51\n52\n55\n58\n60\n65\n80\n95\n110\n145\n220\n";
         let df = parse_csv_str(csv).unwrap();
         let opts = HistogramOptions {
             x: "ms".into(),

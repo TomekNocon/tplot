@@ -132,7 +132,12 @@ mod tests {
         // The 40-60ms range has the most observations; whichever bin covers
         // that range should be the tallest (= highest count).
         let layout = layout_histogram(&latency_df(), "ms", Some(7), 80, 16).unwrap();
-        let modal = layout.bars.bars.iter().max_by_key(|b| b.pixel_height).unwrap();
+        let modal = layout
+            .bars
+            .bars
+            .iter()
+            .max_by_key(|b| b.pixel_height)
+            .unwrap();
         assert!(
             modal.label.contains("4") || modal.label.contains("5") || modal.label.contains("6"),
             "modal bin label was {:?}",
