@@ -92,6 +92,23 @@ pub fn boxplot_takeaway(focal: Option<&str>, q1: f64, q3: f64, min_v: f64, max_v
     }
 }
 
+/// Produce a one-line takeaway for a stacked area chart. `focal` is the
+/// largest-total series' key (or `None` when totals are uniform).
+/// `focal_total` is that series's cumulative total, and `grand_total` is the
+/// sum across all series (used for percentage phrasing).
+pub fn stacked_area_takeaway(focal: Option<&str>, focal_total: f64, grand_total: f64) -> String {
+    match focal {
+        None => "Series contributed similar amounts — no clear leader.".to_string(),
+        Some(name) if grand_total <= 0.0 => format!("{name} carried the bulk of the total."),
+        Some(name) => {
+            let pct = (focal_total / grand_total * 100.0).round() as i64;
+            format!(
+                "{name} contributed the most — {pct}% of the cumulative total ({focal_total:.0} of {grand_total:.0})."
+            )
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -159,6 +176,19 @@ mod tests {
     #[test]
     fn boxplot_takeaway_neutral_for_no_focal() {
         let t = boxplot_takeaway(None, 0.0, 0.0, 0.0, 0.0);
+        assert!(t.to_lowercase().contains("similar") || t.to_lowercase().contains("no series"));
+    }
+
+    #[test]
+    fn stacked_area_takeaway_quantifies_share() {
+        let t = stacked_area_takeaway(Some("NA"), 70.0, 94.0);
+        assert!(t.contains("NA"));
+        assert!(t.contains("74%") || t.contains("75%") || t.contains("70"));
+    }
+
+    #[test]
+    fn stacked_area_takeaway_neutral_for_no_focal() {
+        let t = stacked_area_takeaway(None, 0.0, 0.0);
         assert!(t.to_lowercase().contains("similar") || t.to_lowercase().contains("no series"));
     }
 }

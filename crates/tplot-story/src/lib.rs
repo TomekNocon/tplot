@@ -5,12 +5,13 @@ pub mod palette;
 pub mod takeaway;
 
 pub use focal::{
-    FocalChoice, FocalResult, SeriesPoint, SeriesSpread, SeriesTrend, pick_focal,
-    pick_focal_by_delta, pick_focal_by_iqr,
+    FocalChoice, FocalResult, SeriesPoint, SeriesSpread, SeriesTotal, SeriesTrend, pick_focal,
+    pick_focal_by_delta, pick_focal_by_iqr, pick_focal_by_total,
 };
 pub use palette::build_palette_map;
 pub use takeaway::{
     bar_takeaway, boxplot_takeaway, heatmap_takeaway, histogram_takeaway, line_takeaway,
+    stacked_area_takeaway,
 };
 
 use std::collections::HashMap;
@@ -253,6 +254,52 @@ pub fn run_boxplot_story_pass(
         FocalChoice::None => None,
     };
     let keys: Vec<&str> = spreads.iter().map(|s| s.key.as_str()).collect();
+    let palette_map = build_palette_map(&keys, focal_name, palette);
+    StoryAnnotated {
+        focal: focal_name.map(String::from),
+        palette_map,
+        takeaway: None,
+    }
+}
+
+/// Run the story-pass on a stacked area chart. `totals` is the per-series
+/// cumulative total; the focal series is picked by largest total, gated by a
+/// 1.5× trust threshold against the median total. Takeaway is `None` — the
+/// binary composes it with the grand total from the layout.
+pub fn run_stacked_area_story_pass(
+    totals: &[SeriesTotal],
+    config: &StoryConfig,
+    palette: Palette,
+) -> StoryAnnotated {
+    if !config.enabled {
+        let map = totals
+            .iter()
+            .map(|t| (t.key.clone(), palette.focal_color()))
+            .collect();
+        return StoryAnnotated {
+            focal: None,
+            palette_map: map,
+            takeaway: config.annotation.clone(),
+        };
+    }
+    let focal_choice = match &config.focus {
+        FocusMode::Auto => pick_focal_by_total(totals),
+        FocusMode::Series(name) => FocalResult {
+            choice: FocalChoice::Series(name.clone()),
+            trust_score: f64::INFINITY,
+            reason: "user-specified",
+        },
+        FocusMode::None => FocalResult {
+            choice: FocalChoice::None,
+            trust_score: 0.0,
+            reason: "user-disabled",
+        },
+    };
+    let focal_name = match &focal_choice.choice {
+        FocalChoice::Series(s) => Some(s.as_str()),
+        FocalChoice::None => None,
+    };
+    let keys: Vec<&str> = totals.iter().map(|t| t.key.as_str()).collect();
     let palette_map = build_palette_map(&keys, focal_name, palette);
     StoryAnnotated {
         focal: focal_name.map(String::from),

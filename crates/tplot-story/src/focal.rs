@@ -201,6 +201,66 @@ pub fn pick_focal_by_iqr(spreads: &[SeriesSpread]) -> FocalResult {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct SeriesTotal {
+    pub key: String,
+    pub total: f64,
+}
+
+/// Pick the series with the largest total contribution, normalized against the
+/// median total. Returns FocalChoice::None if no series dominates (max total
+/// < 1.5× median).
+pub fn pick_focal_by_total(totals: &[SeriesTotal]) -> FocalResult {
+    if totals.is_empty() {
+        return FocalResult {
+            choice: FocalChoice::None,
+            trust_score: 0.0,
+            reason: "empty",
+        };
+    }
+    let mut sorted: Vec<f64> = totals.iter().map(|t| t.total).collect();
+    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    let n = sorted.len();
+    // Standard median (mean of two middles for even-length).
+    let median = if n.is_multiple_of(2) {
+        (sorted[n / 2 - 1] + sorted[n / 2]) / 2.0
+    } else {
+        sorted[n / 2]
+    };
+    let max_idx = totals
+        .iter()
+        .enumerate()
+        .max_by(|a, b| {
+            a.1.total
+                .partial_cmp(&b.1.total)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        })
+        .map(|(i, _)| i)
+        .unwrap();
+    let trust = if median.abs() < 1e-9 {
+        if totals[max_idx].total > 0.0 {
+            f64::INFINITY
+        } else {
+            0.0
+        }
+    } else {
+        totals[max_idx].total / median
+    };
+    if trust >= TRUST_THRESHOLD {
+        FocalResult {
+            choice: FocalChoice::Series(totals[max_idx].key.clone()),
+            trust_score: trust,
+            reason: "total",
+        }
+    } else {
+        FocalResult {
+            choice: FocalChoice::None,
+            trust_score: trust,
+            reason: "uniform-totals",
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -340,6 +400,50 @@ mod tests {
             },
         ];
         let r = pick_focal_by_iqr(&spreads);
+        assert_eq!(r.choice, FocalChoice::None);
+    }
+
+    #[test]
+    fn picks_largest_total_series() {
+        let totals = vec![
+            SeriesTotal {
+                key: "NA".into(),
+                total: 70.0,
+            },
+            SeriesTotal {
+                key: "EMEA".into(),
+                total: 16.0,
+            },
+            SeriesTotal {
+                key: "LATAM".into(),
+                total: 8.0,
+            },
+        ];
+        let r = pick_focal_by_total(&totals);
+        assert_eq!(r.choice, FocalChoice::Series("NA".into()));
+    }
+
+    #[test]
+    fn admits_no_focal_when_totals_uniform() {
+        let totals = vec![
+            SeriesTotal {
+                key: "a".into(),
+                total: 50.0,
+            },
+            SeriesTotal {
+                key: "b".into(),
+                total: 51.0,
+            },
+            SeriesTotal {
+                key: "c".into(),
+                total: 49.0,
+            },
+            SeriesTotal {
+                key: "d".into(),
+                total: 50.5,
+            },
+        ];
+        let r = pick_focal_by_total(&totals);
         assert_eq!(r.choice, FocalChoice::None);
     }
 }
