@@ -1,18 +1,37 @@
 mod cli;
+mod commands;
+mod pipeline;
+
 use anyhow::Result;
 use clap::Parser;
 use cli::{Cli, Command};
+use commands::{render_bar, RenderOptions};
 
 fn main() -> Result<()> {
     let args = Cli::parse();
     match args.command {
-        Command::Bar(_) => {
-            // Wired up in Task 19.
-            eprintln!("bar command parsed; pipeline lands in next task");
+        Command::Bar(b) => {
+            let df = pipeline::read_dataframe(&b.input)?;
+            let (_, h) = pipeline::detected_terminal_size(b.common.width);
+            let out = render_bar(&df, &RenderOptions {
+                x:           b.x,
+                y:           b.y,
+                group:       b.group,
+                vertical:    b.vertical,
+                focus:       b.common.focus,
+                annotate:    b.common.annotate,
+                neutral:     b.common.neutral,
+                no_takeaway: b.common.no_takeaway,
+                width:       b.common.width,
+                height:      h,
+                palette_name: b.common.palette,
+            })?;
+            print!("{out}");
             Ok(())
         }
         Command::Json => {
-            eprintln!("json mode parsed; pipeline lands in next task");
+            // Placeholder: JSON mode lands in Task 20.
+            eprintln!("--json mode wired in next task");
             Ok(())
         }
     }
