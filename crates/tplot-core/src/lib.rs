@@ -2,3 +2,5 @@
 
 pub mod dataframe;
 pub use dataframe::{Column, DataFrame, DataFrameError, Series};
+
+pub mod input;
