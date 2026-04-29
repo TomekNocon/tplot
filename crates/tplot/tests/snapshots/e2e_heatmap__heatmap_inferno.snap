@@ -1,0 +1,9 @@
+---
+source: crates/tplot/tests/e2e_heatmap.rs
+expression: strip_ansi(&out)
+---
+Mon  ██████████████████████████████████████████████████████
+Tue  ██████████████████████████████████████████████████████
+             9                 10                11        
+
+      Hottest cell: Tue × 10 (25) — 42% of total.
