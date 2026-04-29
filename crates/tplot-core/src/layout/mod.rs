@@ -15,3 +15,6 @@ pub use scatter::{ScatterLayout, ScatterLayoutError, ScatterSeries, layout_scatt
 
 pub mod heatmap;
 pub use heatmap::{HeatmapError, HeatmapLayout, layout_heatmap};
+
+pub mod boxplot;
+pub use boxplot::{BoxPlotElement, BoxPlotError, BoxPlotLayout, layout_boxplot};
