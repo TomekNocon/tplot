@@ -18,3 +18,8 @@ pub use heatmap::{HeatmapError, HeatmapLayout, layout_heatmap};
 
 pub mod boxplot;
 pub use boxplot::{BoxPlotElement, BoxPlotError, BoxPlotLayout, layout_boxplot};
+
+pub mod stacked_area;
+pub use stacked_area::{
+    StackedAreaError, StackedAreaLayout, StackedAreaSeries, layout_stacked_area,
+};
