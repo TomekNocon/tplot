@@ -1,0 +1,12 @@
+{
+  "kind": "bar",
+  "orientation": "horizontal",
+  "x": {"Column": "quarter"},
+  "y": {"Column": "revenue"},
+  "group": "region",
+  "data": {
+    "quarter": ["Q1","Q1","Q1","Q1","Q1","Q2","Q2","Q2","Q2","Q2","Q3","Q3","Q3","Q3","Q3","Q4","Q4","Q4","Q4","Q4"],
+    "region":  ["NA","EMEA","LATAM","APAC","AU","NA","EMEA","LATAM","APAC","AU","NA","EMEA","LATAM","APAC","AU","NA","EMEA","LATAM","APAC","AU"],
+    "revenue": [42,28,18,22,11,44,38,19,24,13,46,55,20,25,14,47,72,21,26,15]
+  }
+}
