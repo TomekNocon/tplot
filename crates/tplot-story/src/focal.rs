@@ -35,7 +35,7 @@ pub fn pick_focal(points: &[SeriesPoint]) -> FocalResult {
     let mut sorted: Vec<f64> = points.iter().map(|p| p.value).collect();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     // Statistical median: average of two middle values for even-length lists.
-    let median = if sorted.len() % 2 == 0 {
+    let median = if sorted.len().is_multiple_of(2) {
         let mid = sorted.len() / 2;
         (sorted[mid - 1] + sorted[mid]) / 2.0
     } else {
@@ -102,7 +102,7 @@ pub fn pick_focal_by_delta(trends: &[SeriesTrend]) -> FocalResult {
     // Statistical median: average of two middle values for even-length lists
     // so a single dominant series isn't overshadowed by itself sitting at the
     // upper-half index.
-    let median = if sorted.len() % 2 == 0 {
+    let median = if sorted.len().is_multiple_of(2) {
         let mid = sorted.len() / 2;
         (sorted[mid - 1] + sorted[mid]) / 2.0
     } else {

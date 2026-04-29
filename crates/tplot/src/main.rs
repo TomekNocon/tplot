@@ -5,7 +5,10 @@ mod pipeline;
 use anyhow::Result;
 use clap::Parser;
 use cli::{Cli, Command};
-use commands::{HistogramOptions, RenderOptions, render_bar, render_histogram};
+use commands::{
+    HistogramOptions, LineOptions, RenderOptions, ScatterOptions, render_bar, render_histogram,
+    render_line, render_scatter,
+};
 
 fn main() -> Result<()> {
     let args = Cli::parse();
@@ -52,9 +55,47 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
-        Command::Line(_) | Command::Scatter(_) => {
-            // Wired in plan 3 task 12.
-            anyhow::bail!("line/scatter wiring lands in plan 3 task 12")
+        Command::Line(l) => {
+            let df = pipeline::read_dataframe(&l.input)?;
+            let (_, height) = pipeline::detected_terminal_size(l.common.width);
+            let out = render_line(
+                &df,
+                &LineOptions {
+                    x: l.x,
+                    y: l.y,
+                    group: l.group,
+                    focus: l.common.focus,
+                    annotate: l.common.annotate,
+                    neutral: l.common.neutral,
+                    no_takeaway: l.common.no_takeaway,
+                    width: l.common.width,
+                    height,
+                    palette_name: l.common.palette,
+                },
+            )?;
+            print!("{out}");
+            Ok(())
+        }
+        Command::Scatter(s) => {
+            let df = pipeline::read_dataframe(&s.input)?;
+            let (_, height) = pipeline::detected_terminal_size(s.common.width);
+            let out = render_scatter(
+                &df,
+                &ScatterOptions {
+                    x: s.x,
+                    y: s.y,
+                    group: s.group,
+                    focus: s.common.focus,
+                    annotate: s.common.annotate,
+                    neutral: s.common.neutral,
+                    no_takeaway: s.common.no_takeaway,
+                    width: s.common.width,
+                    height,
+                    palette_name: s.common.palette,
+                },
+            )?;
+            print!("{out}");
+            Ok(())
         }
         Command::Json => {
             use std::io::Read;
