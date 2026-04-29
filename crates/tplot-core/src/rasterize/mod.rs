@@ -15,3 +15,6 @@ pub use heatmap::rasterize_heatmap;
 
 pub mod boxplot;
 pub use boxplot::rasterize_boxplot;
+
+pub mod stacked_area;
+pub use stacked_area::rasterize_stacked_area;
