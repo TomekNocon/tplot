@@ -12,3 +12,6 @@ pub use line::{LineLayout, LineLayoutError, LineSeries, layout_line};
 
 pub mod scatter;
 pub use scatter::{ScatterLayout, ScatterLayoutError, ScatterSeries, layout_scatter};
+
+pub mod heatmap;
+pub use heatmap::{HeatmapError, HeatmapLayout, layout_heatmap};
