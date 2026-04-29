@@ -1,6 +1,6 @@
 use crate::commands::{
-    HistogramOptions, LineOptions, RenderOptions, ScatterOptions, SparkOptions, render_bar,
-    render_histogram, render_line, render_scatter,
+    HeatmapOptions, HistogramOptions, LineOptions, RenderOptions, ScatterOptions, SparkOptions,
+    render_bar, render_heatmap, render_histogram, render_line, render_scatter,
 };
 use anyhow::{Result, anyhow};
 use tplot_core::input::parse_json_str;
@@ -178,7 +178,27 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             };
             crate::commands::sparkline::render_sparkline_from_numbers(&nums, &opts)
         }
-        ChartKind::Heatmap { .. } => Err(anyhow!("heatmap JSON dispatch lands in plan 4.5 task 8")),
+        ChartKind::Heatmap { value } => {
+            let x = match spec.x {
+                Axis::Column(c) => c,
+                _ => return Err(anyhow!("inline x axis not supported in v1")),
+            };
+            let y = match spec.y {
+                Axis::Column(c) => c,
+                _ => return Err(anyhow!("inline y axis not supported in v1")),
+            };
+            let opts = HeatmapOptions {
+                x,
+                y,
+                value,
+                ramp_name: "inferno".into(),
+                annotate: spec.story.annotation,
+                no_takeaway: !spec.story.takeaway,
+                width: Some(canvas_w),
+                height: canvas_h,
+            };
+            render_heatmap(&parsed.dataframe, &opts)
+        }
     }
 }
 

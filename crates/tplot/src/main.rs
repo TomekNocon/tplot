@@ -6,8 +6,8 @@ use anyhow::Result;
 use clap::Parser;
 use cli::{Cli, Command};
 use commands::{
-    HistogramOptions, LineOptions, RenderOptions, ScatterOptions, render_bar, render_histogram,
-    render_line, render_scatter,
+    HeatmapOptions, HistogramOptions, LineOptions, RenderOptions, ScatterOptions, render_bar,
+    render_heatmap, render_histogram, render_line, render_scatter,
 };
 
 fn main() -> Result<()> {
@@ -118,9 +118,24 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
-        Command::Heatmap(_) => {
-            // Wired in Task 8.
-            Err(anyhow::anyhow!("heatmap dispatch lands in plan 4.5 task 8"))
+        Command::Heatmap(h) => {
+            let df = pipeline::read_dataframe(&h.input)?;
+            let (_, height) = pipeline::detected_terminal_size(h.common.width);
+            let out = render_heatmap(
+                &df,
+                &HeatmapOptions {
+                    x: h.x,
+                    y: h.y,
+                    value: h.value,
+                    ramp_name: h.ramp,
+                    annotate: h.common.annotate,
+                    no_takeaway: h.common.no_takeaway,
+                    width: h.common.width,
+                    height,
+                },
+            )?;
+            print!("{out}");
+            Ok(())
         }
         Command::Json => {
             use std::io::Read;
