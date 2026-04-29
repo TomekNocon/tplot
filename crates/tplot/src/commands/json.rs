@@ -75,12 +75,8 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             };
             render_bar(&parsed.dataframe, &opts)
         }
-        ChartKind::Line => {
-            return Err(anyhow!("line JSON dispatch lands in plan 3 task 12"));
-        }
-        ChartKind::Scatter => {
-            return Err(anyhow!("scatter JSON dispatch lands in plan 3 task 12"));
-        }
+        ChartKind::Line => Err(anyhow!("line JSON dispatch lands in plan 3 task 12")),
+        ChartKind::Scatter => Err(anyhow!("scatter JSON dispatch lands in plan 3 task 12")),
         ChartKind::Histogram { bins } => {
             let x = match spec.x {
                 Axis::Column(c) => c,

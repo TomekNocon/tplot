@@ -16,10 +16,10 @@ pub fn rasterize_scatter(
         }
         paint_points(s, palette, buf);
     }
-    if let Some(name) = focal {
-        if let Some(s) = layout.series.iter().find(|s| s.key == name) {
-            paint_points(s, palette, buf);
-        }
+    if let Some(name) = focal
+        && let Some(s) = layout.series.iter().find(|s| s.key == name)
+    {
+        paint_points(s, palette, buf);
     }
 }
 

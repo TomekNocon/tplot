@@ -19,10 +19,10 @@ pub fn rasterize_line(
         paint_series(s, palette, buf);
     }
     // Then paint the focal series on top.
-    if let Some(name) = focal {
-        if let Some(s) = layout.series.iter().find(|s| s.key == name) {
-            paint_series(s, palette, buf);
-        }
+    if let Some(name) = focal
+        && let Some(s) = layout.series.iter().find(|s| s.key == name)
+    {
+        paint_series(s, palette, buf);
     }
 }
 

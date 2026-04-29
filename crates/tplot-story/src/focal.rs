@@ -71,6 +71,62 @@ pub fn pick_focal(points: &[SeriesPoint]) -> FocalResult {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct SeriesTrend {
+    pub key: String,
+    pub first: f64,
+    pub last: f64,
+}
+
+/// Pick the series with the largest absolute delta (last - first), normalized
+/// against the median absolute delta. Returns FocalChoice::None if no series
+/// dominates (max delta < 1.5× median).
+pub fn pick_focal_by_delta(trends: &[SeriesTrend]) -> FocalResult {
+    if trends.is_empty() {
+        return FocalResult {
+            choice: FocalChoice::None,
+            trust_score: 0.0,
+            reason: "empty",
+        };
+    }
+
+    let abs_deltas: Vec<f64> = trends.iter().map(|t| (t.last - t.first).abs()).collect();
+    let mut sorted = abs_deltas.clone();
+    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    let median = sorted[sorted.len() / 2];
+
+    let max_idx = abs_deltas
+        .iter()
+        .enumerate()
+        .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
+        .map(|(i, _)| i)
+        .unwrap();
+
+    let trust = if median.abs() < 1e-9 {
+        if abs_deltas[max_idx] > 0.0 {
+            f64::INFINITY
+        } else {
+            0.0
+        }
+    } else {
+        abs_deltas[max_idx] / median
+    };
+
+    if trust >= TRUST_THRESHOLD {
+        FocalResult {
+            choice: FocalChoice::Series(trends[max_idx].key.clone()),
+            trust_score: trust,
+            reason: "delta",
+        }
+    } else {
+        FocalResult {
+            choice: FocalChoice::None,
+            trust_score: trust,
+            reason: "no-clear-trend",
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -108,6 +164,60 @@ mod tests {
     #[test]
     fn empty_input_returns_none() {
         let r = pick_focal(&[]);
+        assert_eq!(r.choice, FocalChoice::None);
+    }
+
+    #[test]
+    fn picks_largest_delta_series() {
+        // EMEA grew most in absolute terms; APAC stayed flat.
+        let trends = vec![
+            SeriesTrend {
+                key: "NA".into(),
+                first: 100.0,
+                last: 105.0,
+            },
+            SeriesTrend {
+                key: "EMEA".into(),
+                first: 50.0,
+                last: 200.0,
+            },
+            SeriesTrend {
+                key: "LATAM".into(),
+                first: 30.0,
+                last: 28.0,
+            },
+            SeriesTrend {
+                key: "APAC".into(),
+                first: 80.0,
+                last: 81.0,
+            },
+        ];
+        let r = pick_focal_by_delta(&trends);
+        assert_eq!(r.choice, FocalChoice::Series("EMEA".into()));
+        assert!(r.trust_score > 1.5);
+    }
+
+    #[test]
+    fn admits_no_focal_when_trends_uniform() {
+        // All series move by similar magnitude (max-vs-median < 1.5×).
+        let trends = vec![
+            SeriesTrend {
+                key: "a".into(),
+                first: 50.0,
+                last: 51.0,
+            },
+            SeriesTrend {
+                key: "b".into(),
+                first: 50.0,
+                last: 51.4,
+            },
+            SeriesTrend {
+                key: "c".into(),
+                first: 50.0,
+                last: 49.0,
+            },
+        ];
+        let r = pick_focal_by_delta(&trends);
         assert_eq!(r.choice, FocalChoice::None);
     }
 }

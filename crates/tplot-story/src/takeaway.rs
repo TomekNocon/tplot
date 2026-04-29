@@ -21,6 +21,30 @@ pub fn bar_takeaway(focal: Option<&str>, focal_value: f64, median: f64, n_series
     }
 }
 
+/// Produce a one-line takeaway for a line chart. `focal` is the focal
+/// series' key (or `None` for a roughly flat field). `first` and `last`
+/// are the focal series' starting and ending values.
+pub fn line_takeaway(focal: Option<&str>, first: f64, last: f64) -> String {
+    match focal {
+        None => "No series stands out — trends are flat.".to_string(),
+        Some(name) => {
+            let delta = last - first;
+            let direction = if delta >= 0.0 { "grew" } else { "fell" };
+            if first.abs() < 1e-9 {
+                format!("{name} {direction} from {first:.0} to {last:.0}.")
+            } else {
+                let pct = (delta.abs() / first.abs() * 100.0).round() as i64;
+                let multiple = (last / first).abs();
+                if multiple >= 2.0 {
+                    format!("{name} {direction} {multiple:.1}× — from {first:.0} to {last:.0}.")
+                } else {
+                    format!("{name} {direction} {pct}% — from {first:.0} to {last:.0}.")
+                }
+            }
+        }
+    }
+}
+
 /// Produce a one-line takeaway for a histogram. `modal_bin` is the label of
 /// the bin that dominates (or `None` for a roughly uniform distribution).
 /// `modal_count` is the count of observations in that bin and `total` is the
@@ -64,5 +88,18 @@ mod tests {
     fn histogram_takeaway_neutral_for_uniform() {
         let t = histogram_takeaway(None, 0, 0);
         assert!(t.to_lowercase().contains("evenly") || t.to_lowercase().contains("no clear"));
+    }
+
+    #[test]
+    fn line_takeaway_describes_trend_direction_and_magnitude() {
+        let t = line_takeaway(Some("EMEA"), 50.0, 200.0);
+        assert!(t.contains("EMEA"));
+        assert!(t.contains("rose") || t.contains("grew") || t.contains("4×") || t.contains("300%"));
+    }
+
+    #[test]
+    fn line_takeaway_neutral_for_no_focal() {
+        let t = line_takeaway(None, 0.0, 0.0);
+        assert!(t.to_lowercase().contains("no series") || t.to_lowercase().contains("flat"));
     }
 }
