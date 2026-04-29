@@ -8,7 +8,7 @@ pub use focal::{
     FocalChoice, FocalResult, SeriesPoint, SeriesTrend, pick_focal, pick_focal_by_delta,
 };
 pub use palette::build_palette_map;
-pub use takeaway::{bar_takeaway, histogram_takeaway, line_takeaway};
+pub use takeaway::{bar_takeaway, heatmap_takeaway, histogram_takeaway, line_takeaway};
 
 use std::collections::HashMap;
 use tplot_protocol::{FocusMode, Palette, RgbColor, StoryConfig};

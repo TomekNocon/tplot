@@ -60,6 +60,21 @@ pub fn histogram_takeaway(modal_bin: Option<&str>, modal_count: u64, total: u64)
     }
 }
 
+/// `cell` is (x_label, y_label); `value` is the hot cell's value;
+/// `total` is the sum across all cells (used for percentage phrasing).
+pub fn heatmap_takeaway(cell: Option<(&str, &str)>, value: f64, total: f64) -> String {
+    match cell {
+        None => "No data — heatmap is empty.".to_string(),
+        Some((y_label, x_label)) if total <= 0.0 => {
+            format!("Hottest cell: {y_label} × {x_label} ({value:.0}).")
+        }
+        Some((y_label, x_label)) => {
+            let pct = (value / total * 100.0).round() as i64;
+            format!("Hottest cell: {y_label} × {x_label} ({value:.0}) — {pct}% of total.")
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -101,5 +116,19 @@ mod tests {
     fn line_takeaway_neutral_for_no_focal() {
         let t = line_takeaway(None, 0.0, 0.0);
         assert!(t.to_lowercase().contains("no series") || t.to_lowercase().contains("flat"));
+    }
+
+    #[test]
+    fn heatmap_takeaway_names_hot_cell_with_value() {
+        let t = heatmap_takeaway(Some(("Tue", "10")), 25.0, 60.0);
+        assert!(t.contains("Tue"));
+        assert!(t.contains("10"));
+        assert!(t.contains("25") || t.contains("42%") || t.contains("41%"));
+    }
+
+    #[test]
+    fn heatmap_takeaway_neutral_for_empty_grid() {
+        let t = heatmap_takeaway(None, 0.0, 0.0);
+        assert!(t.to_lowercase().contains("no data") || t.to_lowercase().contains("empty"));
     }
 }
