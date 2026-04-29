@@ -18,6 +18,10 @@ pub enum Command {
     Bar(BarArgs),
     /// Render a histogram of a single numeric column.
     Hist(HistArgs),
+    /// Render a line chart (time-series friendly).
+    Line(LineArgs),
+    /// Render a scatter plot.
+    Scatter(ScatterArgs),
     /// Read a JSON ChartSpec from stdin and render it.
     Json,
 }
@@ -52,6 +56,40 @@ pub struct HistArgs {
     /// Bin count. Default: Sturges' rule (ceil(log2(N)+1)).
     #[arg(long)]
     pub bins: Option<usize>,
+    #[command(flatten)]
+    pub common: CommonStoryArgs,
+}
+
+#[derive(Args, Debug)]
+pub struct LineArgs {
+    /// Path to CSV or JSON input. Use `-` for stdin.
+    pub input: String,
+    /// Numeric column for x-axis (e.g., time).
+    #[arg(short = 'x')]
+    pub x: String,
+    /// Numeric column for y-axis (e.g., metric value).
+    #[arg(short = 'y')]
+    pub y: String,
+    /// Optional grouping column splitting into multiple series.
+    #[arg(long)]
+    pub group: Option<String>,
+    #[command(flatten)]
+    pub common: CommonStoryArgs,
+}
+
+#[derive(Args, Debug)]
+pub struct ScatterArgs {
+    /// Path to CSV or JSON input. Use `-` for stdin.
+    pub input: String,
+    /// Numeric column for x-axis.
+    #[arg(short = 'x')]
+    pub x: String,
+    /// Numeric column for y-axis.
+    #[arg(short = 'y')]
+    pub y: String,
+    /// Optional grouping column splitting into multiple series.
+    #[arg(long)]
+    pub group: Option<String>,
     #[command(flatten)]
     pub common: CommonStoryArgs,
 }
@@ -117,6 +155,43 @@ mod tests {
                 assert_eq!(h.bins, Some(20));
             }
             _ => panic!("expected Hist"),
+        }
+    }
+
+    #[test]
+    fn parses_line_subcommand() {
+        let args = Cli::parse_from([
+            "tplot", "line", "metrics.csv", "-x", "time", "-y", "value", "--group", "series",
+        ]);
+        match args.command {
+            Command::Line(l) => {
+                assert_eq!(l.input, "metrics.csv");
+                assert_eq!(l.x, "time");
+                assert_eq!(l.y, "value");
+                assert_eq!(l.group.as_deref(), Some("series"));
+            }
+            _ => panic!("expected Line"),
+        }
+    }
+
+    #[test]
+    fn parses_scatter_subcommand() {
+        let args = Cli::parse_from([
+            "tplot",
+            "scatter",
+            "users.csv",
+            "-x",
+            "signup_age",
+            "-y",
+            "session_count",
+        ]);
+        match args.command {
+            Command::Scatter(s) => {
+                assert_eq!(s.input, "users.csv");
+                assert_eq!(s.x, "signup_age");
+                assert_eq!(s.y, "session_count");
+            }
+            _ => panic!("expected Scatter"),
         }
     }
 

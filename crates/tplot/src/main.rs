@@ -52,6 +52,10 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
+        Command::Line(_) | Command::Scatter(_) => {
+            // Wired in plan 3 task 12.
+            anyhow::bail!("line/scatter wiring lands in plan 3 task 12")
+        }
         Command::Json => {
             use std::io::Read;
             let mut buf = String::new();
