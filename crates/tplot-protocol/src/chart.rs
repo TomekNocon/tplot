@@ -4,8 +4,15 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum ChartKind {
-    Bar { orientation: BarOrientation },
-    // Other variants land in subsequent plans.
+    Bar {
+        orientation: BarOrientation,
+    },
+    /// Histogram of a single numeric column. Bin count is auto-computed
+    /// when None (Sturges' rule); explicit override via Some(N).
+    Histogram {
+        #[serde(default)]
+        bins: Option<usize>,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -59,6 +66,21 @@ mod tests {
             y: Axis::Column("revenue".into()),
             group: Some("region".into()),
             title: None,
+            story: StoryConfig::default(),
+        };
+        let json = serde_json::to_string(&spec).unwrap();
+        let back: ChartSpec = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, spec);
+    }
+
+    #[test]
+    fn histogram_spec_round_trip() {
+        let spec = ChartSpec {
+            kind: ChartKind::Histogram { bins: Some(20) },
+            x: Axis::Column("latency_ms".into()),
+            y: Axis::Column("__count__".into()),
+            group: None,
+            title: Some("Request latency distribution".into()),
             story: StoryConfig::default(),
         };
         let json = serde_json::to_string(&spec).unwrap();
