@@ -178,6 +178,7 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             };
             crate::commands::sparkline::render_sparkline_from_numbers(&nums, &opts)
         }
+        ChartKind::BoxPlot => Err(anyhow!("boxplot JSON dispatch lands in plan 5 task 8")),
         ChartKind::Heatmap { value } => {
             let x = match spec.x {
                 Axis::Column(c) => c,

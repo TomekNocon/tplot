@@ -21,6 +21,9 @@ pub enum ChartKind {
     Heatmap {
         value: String,
     },
+    /// Vertical box plots — one column per group (the `x` column),
+    /// 5-number summary of the `y` column per group.
+    BoxPlot,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -132,6 +135,20 @@ mod tests {
             },
             x: Axis::Column("hour".into()),
             y: Axis::Column("day".into()),
+            group: None,
+            title: None,
+            story: StoryConfig::default(),
+        };
+        let json = serde_json::to_string(&spec).unwrap();
+        assert_eq!(serde_json::from_str::<ChartSpec>(&json).unwrap(), spec);
+    }
+
+    #[test]
+    fn boxplot_spec_round_trip() {
+        let spec = ChartSpec {
+            kind: ChartKind::BoxPlot,
+            x: Axis::Column("endpoint".into()),
+            y: Axis::Column("latency_ms".into()),
             group: None,
             title: None,
             story: StoryConfig::default(),
