@@ -6,8 +6,8 @@ use anyhow::Result;
 use clap::Parser;
 use cli::{Cli, Command};
 use commands::{
-    HeatmapOptions, HistogramOptions, LineOptions, RenderOptions, ScatterOptions, render_bar,
-    render_heatmap, render_histogram, render_line, render_scatter,
+    BoxOptions, HeatmapOptions, HistogramOptions, LineOptions, RenderOptions, ScatterOptions,
+    render_bar, render_boxplot, render_heatmap, render_histogram, render_line, render_scatter,
 };
 
 fn main() -> Result<()> {
@@ -137,7 +137,26 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
-        Command::Box(_) => unimplemented!("box subcommand wiring lands in plan 5 task 8"),
+        Command::Box(b) => {
+            let df = pipeline::read_dataframe(&b.input)?;
+            let (_, height) = pipeline::detected_terminal_size(b.common.width);
+            let out = render_boxplot(
+                &df,
+                &BoxOptions {
+                    x: b.x,
+                    y: b.y,
+                    focus: b.common.focus,
+                    annotate: b.common.annotate,
+                    neutral: b.common.neutral,
+                    no_takeaway: b.common.no_takeaway,
+                    width: b.common.width,
+                    height,
+                    palette_name: b.common.palette,
+                },
+            )?;
+            print!("{out}");
+            Ok(())
+        }
         Command::Json => {
             use std::io::Read;
             let mut buf = String::new();
