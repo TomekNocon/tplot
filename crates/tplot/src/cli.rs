@@ -16,6 +16,8 @@ pub struct Cli {
 pub enum Command {
     /// Render a bar chart from a CSV/JSON file.
     Bar(BarArgs),
+    /// Render a histogram of a single numeric column.
+    Hist(HistArgs),
     /// Read a JSON ChartSpec from stdin and render it.
     Json,
 }
@@ -36,6 +38,20 @@ pub struct BarArgs {
     /// Vertical bars instead of horizontal.
     #[arg(long)]
     pub vertical: bool,
+    #[command(flatten)]
+    pub common: CommonStoryArgs,
+}
+
+#[derive(Args, Debug)]
+pub struct HistArgs {
+    /// Path to CSV or JSON input. Use `-` for stdin.
+    pub input: String,
+    /// Numeric column to bin.
+    #[arg(short = 'x')]
+    pub x: String,
+    /// Bin count. Default: Sturges' rule (ceil(log2(N)+1)).
+    #[arg(long)]
+    pub bins: Option<usize>,
     #[command(flatten)]
     pub common: CommonStoryArgs,
 }
@@ -88,6 +104,19 @@ mod tests {
                 assert_eq!(b.group.as_deref(), Some("region"));
             }
             _ => panic!("expected Bar"),
+        }
+    }
+
+    #[test]
+    fn parses_hist_subcommand() {
+        let args = Cli::parse_from(["tplot", "hist", "latencies.csv", "-x", "ms", "--bins", "20"]);
+        match args.command {
+            Command::Hist(h) => {
+                assert_eq!(h.input, "latencies.csv");
+                assert_eq!(h.x, "ms");
+                assert_eq!(h.bins, Some(20));
+            }
+            _ => panic!("expected Hist"),
         }
     }
 

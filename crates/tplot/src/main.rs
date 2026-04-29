@@ -32,6 +32,7 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
+        Command::Hist(_) => Err(anyhow::anyhow!("hist subcommand wiring lands in task 9")),
         Command::Json => {
             use std::io::Read;
             let mut buf = String::new();
