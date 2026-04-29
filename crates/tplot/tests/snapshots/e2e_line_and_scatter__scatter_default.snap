@@ -1,0 +1,28 @@
+---
+source: crates/tplot/tests/e2e_line_and_scatter.rs
+expression: strip_ansi(&out)
+---
+   30                                 ⠈                                         
+                                                                                
+                                               ⠁                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                       ⠂                        
+                                                                                
+   20                                                                           
+                                                                                
+                              ⠠                                ⠄                
+                                                                                
+                                                                                
+                      ⠠                                                ⠠        
+                                                                                
+                                                                                
+              ⡀                                                                ⢀
+                                                                                
+   10 ⡀                                                                         
+      1                                                                       10
+
+       No series stands out clearly — values are within ±50% of the median.
