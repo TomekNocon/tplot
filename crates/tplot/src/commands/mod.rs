@@ -16,5 +16,8 @@ pub use sparkline::{SparkOptions, render_sparkline};
 pub mod heatmap;
 pub use heatmap::{HeatmapOptions, render_heatmap};
 
+pub mod boxplot;
+pub use boxplot::{BoxOptions, render_boxplot};
+
 pub mod json;
 pub use json::render_from_json;
