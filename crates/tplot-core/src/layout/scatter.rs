@@ -64,7 +64,11 @@ pub fn layout_scatter(
     }
 
     let groups: Vec<String> = if let Some(g) = group_col {
-        match df.column(g).map_err(|_| ScatterLayoutError::Empty)?.series() {
+        match df
+            .column(g)
+            .map_err(|_| ScatterLayoutError::Empty)?
+            .series()
+        {
             Series::Strings(v) => v.clone(),
             Series::Numbers(v) => v.iter().map(|n| format!("{n}")).collect(),
         }

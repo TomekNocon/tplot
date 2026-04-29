@@ -145,14 +145,8 @@ mod tests {
 
     fn multi_series_df() -> DataFrame {
         DataFrame::from_columns(vec![
-            Column::new(
-                "t",
-                Series::Numbers(vec![1.0, 1.0, 2.0, 2.0, 3.0, 3.0]),
-            ),
-            Column::new(
-                "v",
-                Series::Numbers(vec![10.0, 5.0, 20.0, 8.0, 30.0, 12.0]),
-            ),
+            Column::new("t", Series::Numbers(vec![1.0, 1.0, 2.0, 2.0, 3.0, 3.0])),
+            Column::new("v", Series::Numbers(vec![10.0, 5.0, 20.0, 8.0, 30.0, 12.0])),
             Column::new(
                 "g",
                 Series::Strings(

@@ -4,7 +4,9 @@ pub mod focal;
 pub mod palette;
 pub mod takeaway;
 
-pub use focal::{FocalChoice, FocalResult, SeriesPoint, SeriesTrend, pick_focal, pick_focal_by_delta};
+pub use focal::{
+    FocalChoice, FocalResult, SeriesPoint, SeriesTrend, pick_focal, pick_focal_by_delta,
+};
 pub use palette::build_palette_map;
 pub use takeaway::{bar_takeaway, histogram_takeaway, line_takeaway};
 

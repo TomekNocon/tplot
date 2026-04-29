@@ -58,7 +58,12 @@ pub fn render_scatter(df: &DataFrame, opts: &ScatterOptions) -> Result<String> {
     let story = run_bar_story_pass(&counts, &story_cfg, palette);
 
     let mut buf = PixelBuffer::new(layout.plot_box.pixel_width, layout.plot_box.pixel_height);
-    rasterize_scatter(&layout, story.focal.as_deref(), &story.palette_map, &mut buf);
+    rasterize_scatter(
+        &layout,
+        story.focal.as_deref(),
+        &story.palette_map,
+        &mut buf,
+    );
 
     let caps = Capabilities::from_vars(|name| std::env::var(name).ok());
     let body = render_braille(&buf, caps);

@@ -161,7 +161,15 @@ mod tests {
     #[test]
     fn parses_line_subcommand() {
         let args = Cli::parse_from([
-            "tplot", "line", "metrics.csv", "-x", "time", "-y", "value", "--group", "series",
+            "tplot",
+            "line",
+            "metrics.csv",
+            "-x",
+            "time",
+            "-y",
+            "value",
+            "--group",
+            "series",
         ]);
         match args.command {
             Command::Line(l) => {

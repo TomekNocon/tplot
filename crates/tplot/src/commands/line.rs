@@ -68,7 +68,12 @@ pub fn render_line(df: &DataFrame, opts: &LineOptions) -> Result<String> {
 
     // ----- rasterize -------------------------------------------------------
     let mut buf = PixelBuffer::new(layout.plot_box.pixel_width, layout.plot_box.pixel_height);
-    rasterize_line(&layout, story.focal.as_deref(), &story.palette_map, &mut buf);
+    rasterize_line(
+        &layout,
+        story.focal.as_deref(),
+        &story.palette_map,
+        &mut buf,
+    );
 
     // ----- render with Braille ---------------------------------------------
     let caps = Capabilities::from_vars(|name| std::env::var(name).ok());
@@ -180,10 +185,7 @@ mod tests {
         };
         let out = render_line(&df, &opts).unwrap();
         // Should highlight B in burnt orange.
-        assert!(
-            out.contains("\x1b[38;2;238;123;61m"),
-            "missing focal color"
-        );
+        assert!(out.contains("\x1b[38;2;238;123;61m"), "missing focal color");
         // Some Braille glyph should appear.
         let has_braille = out.chars().any(|c| {
             let v = c as u32;
