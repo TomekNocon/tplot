@@ -178,6 +178,7 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             };
             crate::commands::sparkline::render_sparkline_from_numbers(&nums, &opts)
         }
+        ChartKind::Heatmap { .. } => Err(anyhow!("heatmap JSON dispatch lands in plan 4.5 task 8")),
     }
 }
 

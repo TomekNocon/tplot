@@ -16,6 +16,11 @@ pub enum ChartKind {
     Line,
     Scatter,
     Sparkline,
+    /// 2D heatmap. Long-form input: x and y axes are categorical columns;
+    /// the named `value` column is the numeric color intensity.
+    Heatmap {
+        value: String,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -111,6 +116,22 @@ mod tests {
             kind: ChartKind::Sparkline,
             x: Axis::Column("__index__".into()),
             y: Axis::Column("value".into()),
+            group: None,
+            title: None,
+            story: StoryConfig::default(),
+        };
+        let json = serde_json::to_string(&spec).unwrap();
+        assert_eq!(serde_json::from_str::<ChartSpec>(&json).unwrap(), spec);
+    }
+
+    #[test]
+    fn heatmap_spec_round_trip() {
+        let spec = ChartSpec {
+            kind: ChartKind::Heatmap {
+                value: "count".into(),
+            },
+            x: Axis::Column("hour".into()),
+            y: Axis::Column("day".into()),
             group: None,
             title: None,
             story: StoryConfig::default(),
