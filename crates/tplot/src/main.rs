@@ -30,8 +30,12 @@ fn main() -> Result<()> {
             Ok(())
         }
         Command::Json => {
-            // Placeholder: JSON mode lands in Task 20.
-            eprintln!("--json mode wired in next task");
+            use std::io::Read;
+            let mut buf = String::new();
+            std::io::stdin().read_to_string(&mut buf)?;
+            let (w, h) = pipeline::detected_terminal_size(None);
+            let out = commands::render_from_json(&buf, w, h)?;
+            print!("{out}");
             Ok(())
         }
     }
