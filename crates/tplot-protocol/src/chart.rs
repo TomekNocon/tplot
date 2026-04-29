@@ -13,6 +13,8 @@ pub enum ChartKind {
         #[serde(default)]
         bins: Option<usize>,
     },
+    Line,
+    Scatter,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -86,5 +88,33 @@ mod tests {
         let json = serde_json::to_string(&spec).unwrap();
         let back: ChartSpec = serde_json::from_str(&json).unwrap();
         assert_eq!(back, spec);
+    }
+
+    #[test]
+    fn line_spec_round_trip() {
+        let spec = ChartSpec {
+            kind: ChartKind::Line,
+            x: Axis::Column("time".into()),
+            y: Axis::Column("value".into()),
+            group: Some("series".into()),
+            title: None,
+            story: StoryConfig::default(),
+        };
+        let json = serde_json::to_string(&spec).unwrap();
+        assert_eq!(serde_json::from_str::<ChartSpec>(&json).unwrap(), spec);
+    }
+
+    #[test]
+    fn scatter_spec_round_trip() {
+        let spec = ChartSpec {
+            kind: ChartKind::Scatter,
+            x: Axis::Column("x".into()),
+            y: Axis::Column("y".into()),
+            group: Some("cluster".into()),
+            title: None,
+            story: StoryConfig::default(),
+        };
+        let json = serde_json::to_string(&spec).unwrap();
+        assert_eq!(serde_json::from_str::<ChartSpec>(&json).unwrap(), spec);
     }
 }
