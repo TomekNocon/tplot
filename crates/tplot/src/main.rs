@@ -5,7 +5,7 @@ mod pipeline;
 use anyhow::Result;
 use clap::Parser;
 use cli::{Cli, Command};
-use commands::{RenderOptions, render_bar};
+use commands::{HistogramOptions, RenderOptions, render_bar, render_histogram};
 
 fn main() -> Result<()> {
     let args = Cli::parse();
@@ -32,7 +32,26 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
-        Command::Hist(_) => Err(anyhow::anyhow!("hist subcommand wiring lands in task 9")),
+        Command::Hist(h) => {
+            let df = pipeline::read_dataframe(&h.input)?;
+            let (_, height) = pipeline::detected_terminal_size(h.common.width);
+            let out = render_histogram(
+                &df,
+                &HistogramOptions {
+                    x: h.x,
+                    bins: h.bins,
+                    focus: h.common.focus,
+                    annotate: h.common.annotate,
+                    neutral: h.common.neutral,
+                    no_takeaway: h.common.no_takeaway,
+                    width: h.common.width,
+                    height,
+                    palette_name: h.common.palette,
+                },
+            )?;
+            print!("{out}");
+            Ok(())
+        }
         Command::Json => {
             use std::io::Read;
             let mut buf = String::new();

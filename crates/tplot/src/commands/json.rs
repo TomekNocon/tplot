@@ -1,4 +1,4 @@
-use crate::commands::{RenderOptions, render_bar};
+use crate::commands::{HistogramOptions, RenderOptions, render_bar, render_histogram};
 use anyhow::{Result, anyhow};
 use tplot_core::input::parse_json_str;
 use tplot_protocol::{Axis, BarOrientation, ChartKind};
@@ -44,8 +44,62 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
         }
         ChartKind::Bar {
             orientation: BarOrientation::Vertical,
-        } => Err(anyhow!("vertical bars land in plan 2")),
-        ChartKind::Histogram { .. } => Err(anyhow!("histogram JSON dispatch lands in plan 2")),
+        } => {
+            let x = match spec.x {
+                Axis::Column(c) => c,
+                _ => {
+                    return Err(anyhow!(
+                        "inline x axis not supported in v1; pass via `data` columns"
+                    ));
+                }
+            };
+            let y = match spec.y {
+                Axis::Column(c) => c,
+                _ => return Err(anyhow!("inline y axis not supported in v1")),
+            };
+            let opts = RenderOptions {
+                x,
+                y,
+                group: spec.group,
+                vertical: true,
+                focus: match spec.story.focus {
+                    tplot_protocol::FocusMode::Series(s) => Some(s),
+                    _ => None,
+                },
+                annotate: spec.story.annotation,
+                neutral: !spec.story.enabled,
+                no_takeaway: !spec.story.takeaway,
+                width: Some(canvas_w),
+                height: canvas_h,
+                palette_name: "signature".into(),
+            };
+            render_bar(&parsed.dataframe, &opts)
+        }
+        ChartKind::Histogram { bins } => {
+            let x = match spec.x {
+                Axis::Column(c) => c,
+                _ => {
+                    return Err(anyhow!(
+                        "inline x axis not supported in v1; pass via `data` columns"
+                    ));
+                }
+            };
+            let opts = HistogramOptions {
+                x,
+                bins,
+                focus: match spec.story.focus {
+                    tplot_protocol::FocusMode::Series(s) => Some(s),
+                    _ => None,
+                },
+                annotate: spec.story.annotation,
+                neutral: !spec.story.enabled,
+                no_takeaway: !spec.story.takeaway,
+                width: Some(canvas_w),
+                height: canvas_h,
+                palette_name: "signature".into(),
+            };
+            render_histogram(&parsed.dataframe, &opts)
+        }
     }
 }
 
