@@ -21,6 +21,21 @@ pub fn bar_takeaway(focal: Option<&str>, focal_value: f64, median: f64, n_series
     }
 }
 
+/// Produce a one-line takeaway for a histogram. `modal_bin` is the label of
+/// the bin that dominates (or `None` for a roughly uniform distribution).
+/// `modal_count` is the count of observations in that bin and `total` is the
+/// total observation count.
+pub fn histogram_takeaway(modal_bin: Option<&str>, modal_count: u64, total: u64) -> String {
+    match modal_bin {
+        None => "Distribution is roughly even — no clear cluster.".to_string(),
+        Some(label) if total == 0 => format!("Most observations fell in {label}."),
+        Some(label) => {
+            let pct = (modal_count as f64 / total as f64 * 100.0).round() as i64;
+            format!("Most observations clustered in {label} — {pct}% of the total.")
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -36,5 +51,18 @@ mod tests {
     fn no_focal_returns_neutral_message() {
         let t = bar_takeaway(None, 0.0, 0.0, 0);
         assert!(t.to_lowercase().contains("no series"));
+    }
+
+    #[test]
+    fn histogram_takeaway_names_modal_bin_and_pct() {
+        let t = histogram_takeaway(Some("40–60"), 8, 19);
+        assert!(t.contains("40–60"));
+        assert!(t.contains("42%") || t.contains("43%") || t.contains("4"));
+    }
+
+    #[test]
+    fn histogram_takeaway_neutral_for_uniform() {
+        let t = histogram_takeaway(None, 0, 0);
+        assert!(t.to_lowercase().contains("evenly") || t.to_lowercase().contains("no clear"));
     }
 }

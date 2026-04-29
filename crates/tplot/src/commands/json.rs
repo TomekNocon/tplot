@@ -45,6 +45,7 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
         ChartKind::Bar {
             orientation: BarOrientation::Vertical,
         } => Err(anyhow!("vertical bars land in plan 2")),
+        ChartKind::Histogram { .. } => Err(anyhow!("histogram JSON dispatch lands in plan 2")),
     }
 }
 

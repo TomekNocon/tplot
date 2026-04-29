@@ -102,7 +102,7 @@ pub fn layout_vertical_bar(
             have: plot_cells_w,
         });
     }
-    let bar_cell_width = max_bar_w.min(8).max(1);
+    let bar_cell_width = max_bar_w.clamp(1, 8);
     let gap_cell_width = (bar_cell_width / 3)
         .max(1)
         .min(max_bar_w.saturating_sub(bar_cell_width));

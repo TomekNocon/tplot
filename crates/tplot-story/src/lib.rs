@@ -6,7 +6,7 @@ pub mod takeaway;
 
 pub use focal::{FocalChoice, FocalResult, SeriesPoint, pick_focal};
 pub use palette::build_palette_map;
-pub use takeaway::bar_takeaway;
+pub use takeaway::{bar_takeaway, histogram_takeaway};
 
 use std::collections::HashMap;
 use tplot_protocol::{FocusMode, Palette, RgbColor, StoryConfig};
@@ -84,6 +84,67 @@ pub fn run_bar_story_pass(
     }
 }
 
+/// Run the story-pass on a histogram (one bin per `SeriesPoint`). Picks the
+/// modal bin via `pick_focal` (max-vs-median dominance ≥ 1.5×) and emits a
+/// modal-cluster takeaway.
+pub fn run_histogram_story_pass(
+    bins: &[SeriesPoint],
+    config: &StoryConfig,
+    palette: Palette,
+) -> StoryAnnotated {
+    if !config.enabled {
+        let map = bins
+            .iter()
+            .map(|p| (p.key.clone(), palette.focal_color()))
+            .collect();
+        return StoryAnnotated {
+            focal: None,
+            palette_map: map,
+            takeaway: config.annotation.clone(),
+        };
+    }
+
+    let total: u64 = bins.iter().map(|p| p.value as u64).sum();
+    let focal_choice = match &config.focus {
+        FocusMode::Auto => pick_focal(bins),
+        FocusMode::Series(name) => FocalResult {
+            choice: FocalChoice::Series(name.clone()),
+            trust_score: f64::INFINITY,
+            reason: "user-specified",
+        },
+        FocusMode::None => FocalResult {
+            choice: FocalChoice::None,
+            trust_score: 0.0,
+            reason: "user-disabled",
+        },
+    };
+
+    let focal_name = match &focal_choice.choice {
+        FocalChoice::Series(s) => Some(s.as_str()),
+        FocalChoice::None => None,
+    };
+
+    let keys: Vec<&str> = bins.iter().map(|p| p.key.as_str()).collect();
+    let palette_map = build_palette_map(&keys, focal_name, palette);
+
+    let takeaway = if !config.takeaway {
+        None
+    } else if let Some(custom) = &config.annotation {
+        Some(custom.clone())
+    } else {
+        let modal_count = focal_name
+            .and_then(|n| bins.iter().find(|p| p.key == n).map(|p| p.value as u64))
+            .unwrap_or(0);
+        Some(takeaway::histogram_takeaway(focal_name, modal_count, total))
+    };
+
+    StoryAnnotated {
+        focal: focal_name.map(String::from),
+        palette_map,
+        takeaway,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -133,5 +194,58 @@ mod tests {
         };
         let s = run_bar_story_pass(&series, &cfg, Palette::Signature);
         assert_eq!(s.focal.as_deref(), Some("b"));
+    }
+
+    #[test]
+    fn histogram_story_pass_picks_modal_bin() {
+        let bins = vec![
+            SeriesPoint {
+                key: "0–10".into(),
+                value: 1.0,
+            },
+            SeriesPoint {
+                key: "10–20".into(),
+                value: 2.0,
+            },
+            SeriesPoint {
+                key: "20–30".into(),
+                value: 8.0,
+            },
+            SeriesPoint {
+                key: "30–40".into(),
+                value: 4.0,
+            },
+            SeriesPoint {
+                key: "40–50".into(),
+                value: 1.0,
+            },
+        ];
+        let s = run_histogram_story_pass(&bins, &StoryConfig::default(), Palette::Signature);
+        assert_eq!(s.focal.as_deref(), Some("20–30"));
+        assert!(s.takeaway.unwrap().contains("20–30"));
+    }
+
+    #[test]
+    fn histogram_story_pass_neutral_when_uniform() {
+        let bins = vec![
+            SeriesPoint {
+                key: "a".into(),
+                value: 5.0,
+            },
+            SeriesPoint {
+                key: "b".into(),
+                value: 5.0,
+            },
+            SeriesPoint {
+                key: "c".into(),
+                value: 5.0,
+            },
+            SeriesPoint {
+                key: "d".into(),
+                value: 6.0,
+            },
+        ];
+        let s = run_histogram_story_pass(&bins, &StoryConfig::default(), Palette::Signature);
+        assert!(s.focal.is_none());
     }
 }
