@@ -13,5 +13,8 @@ pub use scatter::{ScatterOptions, render_scatter};
 pub mod sparkline;
 pub use sparkline::{SparkOptions, render_sparkline};
 
+pub mod heatmap;
+pub use heatmap::{HeatmapOptions, render_heatmap};
+
 pub mod json;
 pub use json::render_from_json;
