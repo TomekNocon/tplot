@@ -24,6 +24,8 @@ pub enum Command {
     Scatter(ScatterArgs),
     /// Render a one-line sparkline from a column or whitespace-separated numbers.
     Spark(SparkArgs),
+    /// Render a 2D heatmap from long-form (x, y, value) data.
+    Heatmap(HeatmapArgs),
     /// Read a JSON ChartSpec from stdin and render it.
     Json,
 }
@@ -109,6 +111,26 @@ pub struct SparkArgs {
     /// Skip color (output plain glyphs only).
     #[arg(long)]
     pub no_color: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct HeatmapArgs {
+    /// Path to CSV or JSON input. Use `-` for stdin.
+    pub input: String,
+    /// X-axis (categorical) column.
+    #[arg(short = 'x')]
+    pub x: String,
+    /// Y-axis (categorical) column.
+    #[arg(short = 'y')]
+    pub y: String,
+    /// Numeric value column for color intensity.
+    #[arg(long)]
+    pub value: String,
+    /// Heat ramp: inferno (default) | viridis | coolwarm.
+    #[arg(long, default_value = "inferno")]
+    pub ramp: String,
+    #[command(flatten)]
+    pub common: CommonStoryArgs,
 }
 
 #[derive(Args, Debug, Clone)]
@@ -242,6 +264,33 @@ mod tests {
                 assert!(s.y.is_none());
             }
             _ => panic!("expected Spark"),
+        }
+    }
+
+    #[test]
+    fn parses_heatmap_subcommand() {
+        let args = Cli::parse_from([
+            "tplot",
+            "heatmap",
+            "metrics.csv",
+            "-x",
+            "hour",
+            "-y",
+            "day",
+            "--value",
+            "count",
+            "--ramp",
+            "viridis",
+        ]);
+        match args.command {
+            Command::Heatmap(h) => {
+                assert_eq!(h.input, "metrics.csv");
+                assert_eq!(h.x, "hour");
+                assert_eq!(h.y, "day");
+                assert_eq!(h.value, "count");
+                assert_eq!(h.ramp, "viridis");
+            }
+            _ => panic!("expected Heatmap"),
         }
     }
 

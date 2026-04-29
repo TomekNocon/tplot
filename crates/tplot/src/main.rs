@@ -118,6 +118,10 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
+        Command::Heatmap(_) => {
+            // Wired in Task 8.
+            Err(anyhow::anyhow!("heatmap dispatch lands in plan 4.5 task 8"))
+        }
         Command::Json => {
             use std::io::Read;
             let mut buf = String::new();
