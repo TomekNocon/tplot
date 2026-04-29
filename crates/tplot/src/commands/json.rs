@@ -225,6 +225,9 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             };
             render_heatmap(&parsed.dataframe, &opts)
         }
+        ChartKind::StackedArea => Err(anyhow!(
+            "stacked-area JSON dispatch lands in plan 5.5 task 7"
+        )),
     }
 }
 

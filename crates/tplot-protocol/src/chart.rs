@@ -24,6 +24,10 @@ pub enum ChartKind {
     /// Vertical box plots — one column per group (the `x` column),
     /// 5-number summary of the `y` column per group.
     BoxPlot,
+    /// Stacked area chart. Long-form input grouped by `group`; each group
+    /// stacks on top of the previous (in first-seen order). Y is the cumulative
+    /// total across all groups.
+    StackedArea,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -150,6 +154,20 @@ mod tests {
             x: Axis::Column("endpoint".into()),
             y: Axis::Column("latency_ms".into()),
             group: None,
+            title: None,
+            story: StoryConfig::default(),
+        };
+        let json = serde_json::to_string(&spec).unwrap();
+        assert_eq!(serde_json::from_str::<ChartSpec>(&json).unwrap(), spec);
+    }
+
+    #[test]
+    fn stacked_area_spec_round_trip() {
+        let spec = ChartSpec {
+            kind: ChartKind::StackedArea,
+            x: Axis::Column("month".into()),
+            y: Axis::Column("revenue".into()),
+            group: Some("region".into()),
             title: None,
             story: StoryConfig::default(),
         };
