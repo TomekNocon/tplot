@@ -11,3 +11,6 @@ pub use pixel_buffer::PixelBuffer;
 pub mod layout;
 
 pub mod rasterize;
+
+pub mod stats;
+pub use stats::{FiveNumberSummary, five_number_summary, quantile};
