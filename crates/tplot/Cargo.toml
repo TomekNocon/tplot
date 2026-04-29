@@ -1,0 +1,20 @@
+[package]
+name = "tplot"
+version.workspace      = true
+edition.workspace      = true
+license.workspace      = true
+repository.workspace   = true
+
+[[bin]]
+name = "tplot"
+path = "src/main.rs"
+
+[dependencies]
+tplot-protocol = { workspace = true }
+tplot-core     = { workspace = true }
+tplot-render   = { workspace = true }
+tplot-story    = { workspace = true }
+clap           = { workspace = true }
+serde          = { workspace = true }
+serde_json     = { workspace = true }
+anyhow         = { workspace = true }
