@@ -93,7 +93,15 @@ pub fn pick_focal_by_delta(trends: &[SeriesTrend]) -> FocalResult {
     let abs_deltas: Vec<f64> = trends.iter().map(|t| (t.last - t.first).abs()).collect();
     let mut sorted = abs_deltas.clone();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-    let median = sorted[sorted.len() / 2];
+    // Statistical median: average of two middle values for even-length lists
+    // so a single dominant series isn't overshadowed by itself sitting at the
+    // upper-half index.
+    let median = if sorted.len() % 2 == 0 {
+        let mid = sorted.len() / 2;
+        (sorted[mid - 1] + sorted[mid]) / 2.0
+    } else {
+        sorted[sorted.len() / 2]
+    };
 
     let max_idx = abs_deltas
         .iter()
