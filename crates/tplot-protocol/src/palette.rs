@@ -37,6 +37,7 @@ impl Palette {
     }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for Palette {
     fn default() -> Self { Palette::Signature }
 }
