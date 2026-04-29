@@ -4,17 +4,17 @@ Storytelling-first chart engine for the terminal — Rust, fast, opinionated by 
 
 > *"Plotly's quality, Cole Knaflic's discipline, in your terminal."*
 
-## What's in this version (Plans 1 + 2 + 3 + 4)
+## What's in this version (Plans 1 + 2 + 3 + 4 + 4.5)
 
-- Six chart types: horizontal bar, vertical bar, histogram, line, scatter, sparkline.
+- Seven chart types: horizontal bar, vertical bar, histogram, line, scatter, sparkline, heatmap.
 - Renderers:
-  - half-blocks (truecolor + 256/16/mono fallback) for horizontal bars
+  - half-blocks (truecolor + 256/16/mono fallback) for horizontal bars and heatmaps
   - vertical-block elements `▁▂▃▄▅▆▇█` for vertical bars, histograms, and sparklines
   - Braille (2×4 dots/cell) for line and scatter
-- Story-pass with chart-specific focal detection (max-value for bars, modal-bin for histograms, largest-delta for lines, point-count for scatter), gray-down palette, and embedded takeaway lines. Trust-score gate refuses to highlight when no series clearly dominates. Sparklines stay deliberately minimal — single colored line, no story overhead.
-- CLI: `tplot bar [--vertical]`, `tplot hist`, `tplot line`, `tplot scatter`, `tplot spark`, `tplot json` (stdin).
+- Story-pass with chart-specific focal detection (max-value for bars, modal-bin for histograms, largest-delta for lines, point-count for scatter, hottest cell for heatmaps), gray-down palette, and embedded takeaway lines. Trust-score gate refuses to highlight when no series clearly dominates. Sparklines stay deliberately minimal — single colored line, no story overhead.
+- CLI: `tplot bar [--vertical]`, `tplot hist`, `tplot line`, `tplot scatter`, `tplot spark`, `tplot heatmap`, `tplot json` (stdin).
 
-Heatmap, stacked area, box plot arrive in later plans. `--graphics` image-protocol output and full capability detection ship after that.
+Stacked area and box plot arrive in later plans. `--graphics` image-protocol output and full capability detection ship after that.
 
 ## Install
 
@@ -61,6 +61,22 @@ Sparklines accept whitespace-separated numbers OR a CSV column via `-y`:
 ps -A -o %cpu= | head -20 | tplot spark -    # CPU% per process
 tplot spark metrics.csv -y latency_ms        # column from a CSV
 ```
+
+```bash
+# 2D heatmap of activity across day × hour
+{ echo "hour,day,count"
+  for d in Mon Tue Wed Thu Fri Sat Sun; do
+    for h in 9 10 11 12 13 14 15 16 17; do
+      echo "$h,$d,$((RANDOM % 50 + 5))"
+    done
+  done
+} | tplot heatmap - -x hour -y day --value count
+
+# With a different ramp
+... | tplot heatmap - -x hour -y day --value count --ramp viridis
+```
+
+Heat ramps: `inferno` (default), `viridis`, `coolwarm`.
 
 ## Flags
 

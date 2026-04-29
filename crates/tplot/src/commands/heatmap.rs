@@ -25,16 +25,8 @@ pub fn render_heatmap(df: &DataFrame, opts: &HeatmapOptions) -> Result<String> {
     let (canvas_w, _) = detected_terminal_size(opts.width);
     let canvas_h = opts.height;
 
-    let layout = layout_heatmap(
-        df,
-        &opts.x,
-        &opts.y,
-        &opts.value,
-        ramp,
-        canvas_w,
-        canvas_h,
-    )
-    .map_err(|e| anyhow!(e.to_string()))?;
+    let layout = layout_heatmap(df, &opts.x, &opts.y, &opts.value, ramp, canvas_w, canvas_h)
+        .map_err(|e| anyhow!(e.to_string()))?;
 
     let mut buf = PixelBuffer::new(layout.plot_box.pixel_width, layout.plot_box.pixel_height);
     rasterize_heatmap(&layout, &mut buf);
@@ -82,17 +74,9 @@ pub fn render_heatmap(df: &DataFrame, opts: &HeatmapOptions) -> Result<String> {
         let takeaway = if let Some(custom) = &opts.annotate {
             custom.clone()
         } else if let Some((xi, yi)) = layout.max_cell {
-            let total: f64 = layout
-                .cell_values
-                .iter()
-                .flatten()
-                .filter_map(|c| *c)
-                .sum();
+            let total: f64 = layout.cell_values.iter().flatten().filter_map(|c| *c).sum();
             heatmap_takeaway(
-                Some((
-                    layout.y_labels[yi].as_str(),
-                    layout.x_labels[xi].as_str(),
-                )),
+                Some((layout.y_labels[yi].as_str(), layout.x_labels[xi].as_str())),
                 layout.max_value,
                 total,
             )

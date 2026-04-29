@@ -120,7 +120,12 @@ pub fn layout_heatmap(
         .collect();
 
     // Determine plot dimensions.
-    let left_margin = y_labels.iter().map(|l| l.chars().count()).max().unwrap_or(0) + 2;
+    let left_margin = y_labels
+        .iter()
+        .map(|l| l.chars().count())
+        .max()
+        .unwrap_or(0)
+        + 2;
     let bottom_reserve = 3;
     let plot_cells_w = canvas_cells_w.saturating_sub(left_margin).max(8);
     let plot_cells_h = canvas_cells_h.saturating_sub(bottom_reserve).max(2);
@@ -233,12 +238,7 @@ mod tests {
         let df = DataFrame::from_columns(vec![
             Column::new(
                 "h",
-                Series::Strings(
-                    vec!["9", "9", "10"]
-                        .into_iter()
-                        .map(String::from)
-                        .collect(),
-                ),
+                Series::Strings(vec!["9", "9", "10"].into_iter().map(String::from).collect()),
             ),
             Column::new(
                 "d",

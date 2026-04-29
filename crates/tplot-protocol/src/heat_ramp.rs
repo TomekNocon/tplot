@@ -215,11 +215,7 @@ mod tests {
     fn from_name_dispatches_known_ramps() {
         assert_eq!(HeatRamp::from_name("inferno").unwrap(), HeatRamp::Inferno);
         assert_eq!(HeatRamp::from_name("viridis").unwrap(), HeatRamp::Viridis);
-        assert_eq!(
-            HeatRamp::from_name("coolwarm").unwrap(),
-            HeatRamp::Coolwarm
-        );
+        assert_eq!(HeatRamp::from_name("coolwarm").unwrap(), HeatRamp::Coolwarm);
         assert!(HeatRamp::from_name("nope").is_err());
     }
-
 }
