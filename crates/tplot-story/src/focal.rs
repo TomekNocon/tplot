@@ -141,6 +141,66 @@ pub fn pick_focal_by_delta(trends: &[SeriesTrend]) -> FocalResult {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct SeriesSpread {
+    pub key: String,
+    pub iqr: f64,
+}
+
+/// Pick the series with the largest IQR (interquartile range), normalized
+/// against the median IQR. Returns FocalChoice::None if no series dominates
+/// (max IQR < 1.5× median).
+pub fn pick_focal_by_iqr(spreads: &[SeriesSpread]) -> FocalResult {
+    if spreads.is_empty() {
+        return FocalResult {
+            choice: FocalChoice::None,
+            trust_score: 0.0,
+            reason: "empty",
+        };
+    }
+    let mut sorted: Vec<f64> = spreads.iter().map(|s| s.iqr).collect();
+    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    // Standard median (mean of two middles for even-length).
+    let n = sorted.len();
+    let median = if n.is_multiple_of(2) {
+        (sorted[n / 2 - 1] + sorted[n / 2]) / 2.0
+    } else {
+        sorted[n / 2]
+    };
+    let max_idx = spreads
+        .iter()
+        .enumerate()
+        .max_by(|a, b| {
+            a.1.iqr
+                .partial_cmp(&b.1.iqr)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        })
+        .map(|(i, _)| i)
+        .unwrap();
+    let trust = if median.abs() < 1e-9 {
+        if spreads[max_idx].iqr > 0.0 {
+            f64::INFINITY
+        } else {
+            0.0
+        }
+    } else {
+        spreads[max_idx].iqr / median
+    };
+    if trust >= TRUST_THRESHOLD {
+        FocalResult {
+            choice: FocalChoice::Series(spreads[max_idx].key.clone()),
+            trust_score: trust,
+            reason: "iqr",
+        }
+    } else {
+        FocalResult {
+            choice: FocalChoice::None,
+            trust_score: trust,
+            reason: "uniform-spread",
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -232,6 +292,54 @@ mod tests {
             },
         ];
         let r = pick_focal_by_delta(&trends);
+        assert_eq!(r.choice, FocalChoice::None);
+    }
+
+    #[test]
+    fn picks_widest_iqr_series() {
+        let spreads = vec![
+            SeriesSpread {
+                key: "A".into(),
+                iqr: 10.0,
+            },
+            SeriesSpread {
+                key: "B".into(),
+                iqr: 12.0,
+            },
+            SeriesSpread {
+                key: "C".into(),
+                iqr: 80.0,
+            }, // dominates
+            SeriesSpread {
+                key: "D".into(),
+                iqr: 8.0,
+            },
+        ];
+        let r = pick_focal_by_iqr(&spreads);
+        assert_eq!(r.choice, FocalChoice::Series("C".into()));
+    }
+
+    #[test]
+    fn admits_no_focal_when_iqr_uniform() {
+        let spreads = vec![
+            SeriesSpread {
+                key: "A".into(),
+                iqr: 10.0,
+            },
+            SeriesSpread {
+                key: "B".into(),
+                iqr: 11.0,
+            },
+            SeriesSpread {
+                key: "C".into(),
+                iqr: 9.0,
+            },
+            SeriesSpread {
+                key: "D".into(),
+                iqr: 10.5,
+            },
+        ];
+        let r = pick_focal_by_iqr(&spreads);
         assert_eq!(r.choice, FocalChoice::None);
     }
 }

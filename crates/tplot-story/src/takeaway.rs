@@ -75,6 +75,23 @@ pub fn heatmap_takeaway(cell: Option<(&str, &str)>, value: f64, total: f64) -> S
     }
 }
 
+/// Produce a one-line takeaway for a box plot. `focal` is the focal
+/// series' key (the widest-IQR group), or `None` for a roughly uniform
+/// spread. The other arguments are the focal group's quartiles and bounds
+/// — the binary supplies them from the layout's 5-number summary.
+pub fn boxplot_takeaway(focal: Option<&str>, q1: f64, q3: f64, min_v: f64, max_v: f64) -> String {
+    match focal {
+        None => "Series have similar spread — no obvious outlier distribution.".to_string(),
+        Some(name) => {
+            let iqr = q3 - q1;
+            let total_range = max_v - min_v;
+            format!(
+                "{name} has the widest spread — IQR {iqr:.0} (range {min_v:.0}–{max_v:.0}, total {total_range:.0})."
+            )
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -130,5 +147,18 @@ mod tests {
     fn heatmap_takeaway_neutral_for_empty_grid() {
         let t = heatmap_takeaway(None, 0.0, 0.0);
         assert!(t.to_lowercase().contains("no data") || t.to_lowercase().contains("empty"));
+    }
+
+    #[test]
+    fn boxplot_takeaway_names_focal_with_iqr() {
+        let t = boxplot_takeaway(Some("/orders"), 50.0, 200.0, 30.0, 400.0);
+        assert!(t.contains("/orders"));
+        assert!(t.contains("150") || t.contains("IQR") || t.contains("spread"));
+    }
+
+    #[test]
+    fn boxplot_takeaway_neutral_for_no_focal() {
+        let t = boxplot_takeaway(None, 0.0, 0.0, 0.0, 0.0);
+        assert!(t.to_lowercase().contains("similar") || t.to_lowercase().contains("no series"));
     }
 }

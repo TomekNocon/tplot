@@ -5,10 +5,13 @@ pub mod palette;
 pub mod takeaway;
 
 pub use focal::{
-    FocalChoice, FocalResult, SeriesPoint, SeriesTrend, pick_focal, pick_focal_by_delta,
+    FocalChoice, FocalResult, SeriesPoint, SeriesSpread, SeriesTrend, pick_focal,
+    pick_focal_by_delta, pick_focal_by_iqr,
 };
 pub use palette::build_palette_map;
-pub use takeaway::{bar_takeaway, heatmap_takeaway, histogram_takeaway, line_takeaway};
+pub use takeaway::{
+    bar_takeaway, boxplot_takeaway, heatmap_takeaway, histogram_takeaway, line_takeaway,
+};
 
 use std::collections::HashMap;
 use tplot_protocol::{FocusMode, Palette, RgbColor, StoryConfig};
@@ -209,6 +212,52 @@ pub fn run_line_story_pass(
         focal: focal_name.map(String::from),
         palette_map,
         takeaway,
+    }
+}
+
+/// Run the story-pass on a box plot. `spreads` is the per-series IQR; the
+/// focal series is picked by largest IQR, gated by a 1.5× trust threshold
+/// against the median IQR. Takeaway is `None` — the binary composes it with
+/// full Q1/Q3/min/max info from the layout.
+pub fn run_boxplot_story_pass(
+    spreads: &[SeriesSpread],
+    config: &StoryConfig,
+    palette: Palette,
+) -> StoryAnnotated {
+    if !config.enabled {
+        let map = spreads
+            .iter()
+            .map(|s| (s.key.clone(), palette.focal_color()))
+            .collect();
+        return StoryAnnotated {
+            focal: None,
+            palette_map: map,
+            takeaway: config.annotation.clone(),
+        };
+    }
+    let focal_choice = match &config.focus {
+        FocusMode::Auto => pick_focal_by_iqr(spreads),
+        FocusMode::Series(name) => FocalResult {
+            choice: FocalChoice::Series(name.clone()),
+            trust_score: f64::INFINITY,
+            reason: "user-specified",
+        },
+        FocusMode::None => FocalResult {
+            choice: FocalChoice::None,
+            trust_score: 0.0,
+            reason: "user-disabled",
+        },
+    };
+    let focal_name = match &focal_choice.choice {
+        FocalChoice::Series(s) => Some(s.as_str()),
+        FocalChoice::None => None,
+    };
+    let keys: Vec<&str> = spreads.iter().map(|s| s.key.as_str()).collect();
+    let palette_map = build_palette_map(&keys, focal_name, palette);
+    StoryAnnotated {
+        focal: focal_name.map(String::from),
+        palette_map,
+        takeaway: None,
     }
 }
 
