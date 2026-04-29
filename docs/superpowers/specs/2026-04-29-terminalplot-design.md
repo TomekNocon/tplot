@@ -29,14 +29,14 @@ Most terminal chart libraries (plotext, youplot, asciichart, gnuplot dumb-termin
 
 ## 4. Architecture
 
-Five crates. Three libraries meet at one binary; nothing else is shared.
+Five crates: one binary on top, four libraries underneath.
 
 ```
 tplot (binary)
   ├── tplot-core      pure data → pixel-buffer
   ├── tplot-render    pixel-buffer → glyph string
   ├── tplot-story     SWD treatment (focal, declutter, takeaway)
-  └── tplot-protocol  JSON schema for --json mode
+  └── tplot-protocol  shared types (ChartSpec, Capabilities, JSON schema)
 ```
 
 **Why this split:**
@@ -45,7 +45,12 @@ tplot (binary)
 - `tplot-core` is pure functions over data and sub-pixel buffers — fully testable without I/O or terminal.
 - `tplot-protocol` is shared types only; downstream language wrappers depend on this crate alone.
 
-**Library independence:** `tplot-core`, `tplot-render`, `tplot-story` do not depend on each other. They meet only at the `tplot` binary. This is enforced by `Cargo.toml` and verified by a CI check.
+**Dependency graph:**
+- `tplot-protocol` has no internal deps; it's the leaf.
+- `tplot-core`, `tplot-render`, `tplot-story` each depend on `tplot-protocol` but **not on each other** — enforced via `Cargo.toml` and a CI check.
+- `tplot` (binary) depends on all four.
+
+This shape means the three feature libraries can be developed and tested in isolation, while the protocol crate is the only thing language wrappers need to import.
 
 ## 5. Data flow (one chart, end to end)
 
