@@ -53,7 +53,12 @@ pub fn render_boxplot(df: &DataFrame, opts: &BoxOptions) -> Result<String> {
 
     // ----- rasterize -------------------------------------------------------
     let mut buf = PixelBuffer::new(layout.plot_box.pixel_width, layout.plot_box.pixel_height);
-    rasterize_boxplot(&layout, story.focal.as_deref(), &story.palette_map, &mut buf);
+    rasterize_boxplot(
+        &layout,
+        story.focal.as_deref(),
+        &story.palette_map,
+        &mut buf,
+    );
 
     // ----- render ----------------------------------------------------------
     let caps = Capabilities::from_vars(|name| std::env::var(name).ok());
@@ -92,9 +97,7 @@ pub fn render_boxplot(df: &DataFrame, opts: &BoxOptions) -> Result<String> {
         let trimmed: String = el.label.chars().take(layout.bar_cell_width).collect();
         let label_chars = trimmed.chars().count();
         let pad_left = layout.bar_cell_width.saturating_sub(label_chars) / 2;
-        let pad_right = layout
-            .bar_cell_width
-            .saturating_sub(label_chars + pad_left);
+        let pad_right = layout.bar_cell_width.saturating_sub(label_chars + pad_left);
         x_axis.push_str(&" ".repeat(pad_left));
         x_axis.push_str(&trimmed);
         x_axis.push_str(&" ".repeat(pad_right));
@@ -159,14 +162,9 @@ mod tests {
         };
         let out = render_boxplot(&df, &opts).unwrap();
         // /orders should be focal → burnt orange escape.
-        assert!(
-            out.contains("\x1b[38;2;238;123;61m"),
-            "missing focal color"
-        );
+        assert!(out.contains("\x1b[38;2;238;123;61m"), "missing focal color");
         assert!(out.contains("/orders"));
         // Takeaway about the widest spread.
-        assert!(
-            out.to_lowercase().contains("widest") || out.to_lowercase().contains("spread")
-        );
+        assert!(out.to_lowercase().contains("widest") || out.to_lowercase().contains("spread"));
     }
 }

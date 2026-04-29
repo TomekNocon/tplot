@@ -53,19 +53,11 @@ pub fn layout_boxplot(
     canvas_cells_w: usize,
     canvas_cells_h: usize,
 ) -> Result<BoxPlotLayout, BoxPlotError> {
-    let labels: Vec<String> = match df
-        .column(x_col)
-        .map_err(|_| BoxPlotError::Empty)?
-        .series()
-    {
+    let labels: Vec<String> = match df.column(x_col).map_err(|_| BoxPlotError::Empty)?.series() {
         Series::Strings(v) => v.clone(),
         Series::Numbers(v) => v.iter().map(|n| format!("{n}")).collect(),
     };
-    let values: Vec<f64> = match df
-        .column(y_col)
-        .map_err(|_| BoxPlotError::Empty)?
-        .series()
-    {
+    let values: Vec<f64> = match df.column(y_col).map_err(|_| BoxPlotError::Empty)?.series() {
         Series::Numbers(v) => v.clone(),
         Series::Strings(_) => return Err(BoxPlotError::NonNumericY(y_col.to_string())),
     };
@@ -213,11 +205,7 @@ mod tests {
         let users = layout.boxes.iter().find(|b| b.label == "/users").unwrap();
         assert!((users.summary.median - 51.0).abs() < 0.01);
         // /orders median = 90 (between 80 and 100, interpolated to 90)
-        let orders = layout
-            .boxes
-            .iter()
-            .find(|b| b.label == "/orders")
-            .unwrap();
+        let orders = layout.boxes.iter().find(|b| b.label == "/orders").unwrap();
         assert!((orders.summary.median - 90.0).abs() < 0.01);
     }
 
@@ -225,11 +213,7 @@ mod tests {
     fn wider_iqr_is_recognized() {
         let layout = layout_boxplot(&endpoints_df(), "endpoint", "ms", 80, 16).unwrap();
         let users = layout.boxes.iter().find(|b| b.label == "/users").unwrap();
-        let orders = layout
-            .boxes
-            .iter()
-            .find(|b| b.label == "/orders")
-            .unwrap();
+        let orders = layout.boxes.iter().find(|b| b.label == "/orders").unwrap();
         assert!(
             orders.summary.iqr() > users.summary.iqr() * 5.0,
             "/orders IQR ({}) should dominate /users IQR ({})",
@@ -241,11 +225,7 @@ mod tests {
     #[test]
     fn pixel_y_is_inverted_max_at_top() {
         let layout = layout_boxplot(&endpoints_df(), "endpoint", "ms", 80, 16).unwrap();
-        let orders = layout
-            .boxes
-            .iter()
-            .find(|b| b.label == "/orders")
-            .unwrap();
+        let orders = layout.boxes.iter().find(|b| b.label == "/orders").unwrap();
         // The `max` value (400) should map to a SMALL pixel_y (top of plot);
         // the `min` value (30) should map to a LARGE pixel_y (bottom).
         assert!(

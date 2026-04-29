@@ -1,0 +1,28 @@
+---
+source: crates/tplot/tests/e2e_boxplot.rs
+expression: strip_ansi(&out)
+---
+  420                                                                           
+                                        ▀█▀                                     
+                                         █                                      
+                                         █                                      
+                                         █                                      
+                                         █                                      
+                                         █                                      
+                                         █                                      
+                                         █                                      
+                                         █                                      
+  202                                 ███████                                   
+                                      ███████                                   
+                                      ███████                                   
+                                      ███████                                   
+                                      ███████                                   
+                                      ▀▀▀▀▀▀▀                                   
+                                      ███████                                   
+                             ▄▄▄▄▄▄▄     █                                      
+                                        ▄█▄                                     
+                                               ▄▄▄▄▄▄▄                          
+  -15                                                                           
+                             /users   /orders  /health
+
+       /orders has the widest spread — IQR 148 (range 30–400, total 370).

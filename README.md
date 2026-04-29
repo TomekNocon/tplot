@@ -4,17 +4,17 @@ Storytelling-first chart engine for the terminal — Rust, fast, opinionated by 
 
 > *"Plotly's quality, Cole Knaflic's discipline, in your terminal."*
 
-## What's in this version (Plans 1 + 2 + 3 + 4 + 4.5)
+## What's in this version (Plans 1 + 2 + 3 + 4 + 4.5 + 5)
 
-- Seven chart types: horizontal bar, vertical bar, histogram, line, scatter, sparkline, heatmap.
+- Eight chart types: horizontal bar, vertical bar, histogram, line, scatter, sparkline, heatmap, box plot.
 - Renderers:
-  - half-blocks (truecolor + 256/16/mono fallback) for horizontal bars and heatmaps
+  - half-blocks (truecolor + 256/16/mono fallback) for horizontal bars, heatmaps, and box plots
   - vertical-block elements `▁▂▃▄▅▆▇█` for vertical bars, histograms, and sparklines
   - Braille (2×4 dots/cell) for line and scatter
-- Story-pass with chart-specific focal detection (max-value for bars, modal-bin for histograms, largest-delta for lines, point-count for scatter, hottest cell for heatmaps), gray-down palette, and embedded takeaway lines. Trust-score gate refuses to highlight when no series clearly dominates. Sparklines stay deliberately minimal — single colored line, no story overhead.
-- CLI: `tplot bar [--vertical]`, `tplot hist`, `tplot line`, `tplot scatter`, `tplot spark`, `tplot heatmap`, `tplot json` (stdin).
+- Story-pass with chart-specific focal detection (max-value for bars, modal-bin for histograms, largest-delta for lines, point-count for scatter, hottest cell for heatmaps, widest-IQR for box plots), gray-down palette, and embedded takeaway lines. Trust-score gate refuses to highlight when no series clearly dominates. Sparklines stay deliberately minimal — single colored line, no story overhead.
+- CLI: `tplot bar [--vertical]`, `tplot hist`, `tplot line`, `tplot scatter`, `tplot spark`, `tplot heatmap`, `tplot box`, `tplot json` (stdin).
 
-Stacked area and box plot arrive in later plans. `--graphics` image-protocol output and full capability detection ship after that.
+Stacked area arrives in a later plan. `--graphics` image-protocol output and full capability detection ship after that.
 
 ## Install
 
@@ -77,6 +77,21 @@ tplot spark metrics.csv -y latency_ms        # column from a CSV
 ```
 
 Heat ramps: `inferno` (default), `viridis`, `coolwarm`.
+
+```bash
+# Vertical box plots showing latency distribution per endpoint
+echo "endpoint,ms
+/users,48
+/users,50
+/users,51
+/users,53
+/orders,30
+/orders,100
+/orders,250
+/orders,400" | tplot box - -x endpoint -y ms
+```
+
+The endpoint with the widest interquartile range is highlighted; the takeaway names its IQR and overall range.
 
 ## Flags
 
