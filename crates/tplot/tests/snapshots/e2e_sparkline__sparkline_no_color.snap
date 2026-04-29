@@ -1,0 +1,5 @@
+---
+source: crates/tplot/tests/e2e_sparkline.rs
+expression: strip_ansi(&out)
+---
+ ▃▁▅▄█
