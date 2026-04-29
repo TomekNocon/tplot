@@ -22,6 +22,8 @@ pub enum Command {
     Line(LineArgs),
     /// Render a scatter plot.
     Scatter(ScatterArgs),
+    /// Render a one-line sparkline from a column or whitespace-separated numbers.
+    Spark(SparkArgs),
     /// Read a JSON ChartSpec from stdin and render it.
     Json,
 }
@@ -92,6 +94,21 @@ pub struct ScatterArgs {
     pub group: Option<String>,
     #[command(flatten)]
     pub common: CommonStoryArgs,
+}
+
+#[derive(Args, Debug)]
+pub struct SparkArgs {
+    /// Path to input. Use `-` for stdin. CSV with -y, or whitespace-separated numbers.
+    pub input: String,
+    /// Column name to extract (only meaningful for CSV input).
+    #[arg(short = 'y')]
+    pub y: Option<String>,
+    /// Color palette: signature | editorial | colorblind-safe.
+    #[arg(long, default_value = "signature")]
+    pub palette: String,
+    /// Skip color (output plain glyphs only).
+    #[arg(long)]
+    pub no_color: bool,
 }
 
 #[derive(Args, Debug, Clone)]
@@ -200,6 +217,31 @@ mod tests {
                 assert_eq!(s.y, "session_count");
             }
             _ => panic!("expected Scatter"),
+        }
+    }
+
+    #[test]
+    fn parses_spark_subcommand() {
+        let args = Cli::parse_from(["tplot", "spark", "metrics.csv", "-y", "latency"]);
+        match args.command {
+            Command::Spark(s) => {
+                assert_eq!(s.input, "metrics.csv");
+                assert_eq!(s.y.as_deref(), Some("latency"));
+                assert_eq!(s.palette, "signature");
+            }
+            _ => panic!("expected Spark"),
+        }
+    }
+
+    #[test]
+    fn parses_spark_from_stdin() {
+        let args = Cli::parse_from(["tplot", "spark", "-"]);
+        match args.command {
+            Command::Spark(s) => {
+                assert_eq!(s.input, "-");
+                assert!(s.y.is_none());
+            }
+            _ => panic!("expected Spark"),
         }
     }
 

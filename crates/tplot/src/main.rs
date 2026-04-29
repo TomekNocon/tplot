@@ -97,6 +97,7 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
+        Command::Spark(_) => unimplemented!("sparkline pipeline wired in Task 4"),
         Command::Json => {
             use std::io::Read;
             let mut buf = String::new();

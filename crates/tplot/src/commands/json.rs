@@ -155,6 +155,7 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             };
             render_histogram(&parsed.dataframe, &opts)
         }
+        ChartKind::Sparkline => Err(anyhow!("sparkline JSON dispatch not wired yet")),
     }
 }
 
