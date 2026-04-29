@@ -159,7 +159,7 @@ The JSON schema is the engine's true API. The CLI is a convenience layer that bu
 import tplot
 tplot.bar(df, x="quarter", y="revenue", group="region")  # auto-renders to terminal
 ```
-Subprocess wrapper around the binary. No PyO3 / no compiled extension. `pip install tplot` pulls the binary via prebuilt wheels.
+Subprocess wrapper around the binary. No PyO3 / no compiled extension. Install via `uv add tplot` (project use) or `uv pip install tplot` (ad-hoc); prebuilt wheels per-arch ship the binary. One-shot use: `uvx tplot` runs the binary without installing.
 
 ## 9. MVP chart set
 
@@ -214,7 +214,7 @@ Errors are designed to look like compiler output — clear location, clear sugge
 - Single static binary via `cargo install tplot`.
 - Homebrew formula (`brew install tplot`).
 - Prebuilt artifacts (Linux x86_64/arm64, macOS Intel/Apple Silicon, Windows x86_64) attached to GitHub releases.
-- Python wheel (v2) — prebuilt wheels per-arch; pure subprocess wrapper.
+- Python wheel (v2) — prebuilt wheels per-arch; pure subprocess wrapper. Distributed for `uv` (`uv add tplot`, `uv pip install tplot`, `uvx tplot`).
 
 **Runtime dependencies:** none. Single static binary.
 
