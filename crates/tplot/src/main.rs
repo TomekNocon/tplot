@@ -97,7 +97,27 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
-        Command::Spark(_) => unimplemented!("sparkline pipeline wired in Task 4"),
+        Command::Spark(s) => {
+            let raw = if s.input == "-" {
+                use std::io::Read;
+                let mut buf = String::new();
+                std::io::stdin().read_to_string(&mut buf)?;
+                buf
+            } else {
+                std::fs::read_to_string(&s.input)?
+            };
+            let out = commands::render_sparkline(
+                &raw,
+                &commands::SparkOptions {
+                    input: s.input,
+                    y: s.y,
+                    palette_name: s.palette,
+                    no_color: s.no_color,
+                },
+            )?;
+            print!("{out}");
+            Ok(())
+        }
         Command::Json => {
             use std::io::Read;
             let mut buf = String::new();

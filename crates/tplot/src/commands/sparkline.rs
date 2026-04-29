@@ -12,7 +12,10 @@ const GLYPHS: [char; 9] = [
 
 #[derive(Debug, Clone)]
 pub struct SparkOptions {
-    pub input: String, // path or "-"
+    /// Path to source (or `-` for stdin). Retained for caller introspection;
+    /// the pipeline consumes already-loaded bytes.
+    #[allow(dead_code)]
+    pub input: String,
     pub y: Option<String>,
     pub palette_name: String,
     pub no_color: bool,

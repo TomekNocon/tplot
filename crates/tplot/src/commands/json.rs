@@ -1,6 +1,6 @@
 use crate::commands::{
-    HistogramOptions, LineOptions, RenderOptions, ScatterOptions, render_bar, render_histogram,
-    render_line, render_scatter,
+    HistogramOptions, LineOptions, RenderOptions, ScatterOptions, SparkOptions, render_bar,
+    render_histogram, render_line, render_scatter,
 };
 use anyhow::{Result, anyhow};
 use tplot_core::input::parse_json_str;
@@ -155,7 +155,29 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             };
             render_histogram(&parsed.dataframe, &opts)
         }
-        ChartKind::Sparkline => Err(anyhow!("sparkline JSON dispatch not wired yet")),
+        ChartKind::Sparkline => {
+            use tplot_core::dataframe::Series;
+            let col = match spec.y {
+                Axis::Column(c) => c,
+                _ => return Err(anyhow!("inline y axis not supported in v1")),
+            };
+            let series = parsed
+                .dataframe
+                .column(&col)
+                .map_err(|e| anyhow!(e.to_string()))?
+                .series();
+            let nums: Vec<f64> = match series {
+                Series::Numbers(v) => v.clone(),
+                Series::Strings(_) => return Err(anyhow!("column `{col}` must be numeric")),
+            };
+            let opts = SparkOptions {
+                input: "-".into(),
+                y: Some(col),
+                palette_name: "signature".into(),
+                no_color: false,
+            };
+            crate::commands::sparkline::render_sparkline_from_numbers(&nums, &opts)
+        }
     }
 }
 
