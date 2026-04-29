@@ -12,3 +12,6 @@ pub use scatter::rasterize_scatter;
 
 pub mod heatmap;
 pub use heatmap::rasterize_heatmap;
+
+pub mod boxplot;
+pub use boxplot::rasterize_boxplot;
