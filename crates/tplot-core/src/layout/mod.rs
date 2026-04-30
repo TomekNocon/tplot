@@ -29,3 +29,6 @@ pub use candlestick::{Candle, CandlestickError, CandlestickLayout, layout_candle
 
 pub mod treemap;
 pub use treemap::{TreemapError, TreemapLayout, TreemapLeaf, layout_treemap};
+
+pub mod violin;
+pub use violin::{Violin, ViolinError, ViolinLayout, layout_violin};
