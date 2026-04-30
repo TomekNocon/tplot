@@ -4,17 +4,17 @@ Storytelling-first chart engine for the terminal — Rust, fast, opinionated by 
 
 > *"Plotly's quality, Cole Knaflic's discipline, in your terminal."*
 
-## What's in this version (Plans 1 + 2 + 3 + 4 + 4.5 + 5)
+## What's in this version (Plans 1 + 2 + 3 + 4 + 4.5 + 5 + 5.5)
 
-- Eight chart types: horizontal bar, vertical bar, histogram, line, scatter, sparkline, heatmap, box plot.
+- Nine chart types: horizontal bar, vertical bar, histogram, line, scatter, sparkline, heatmap, box plot, stacked area.
 - Renderers:
-  - half-blocks (truecolor + 256/16/mono fallback) for horizontal bars, heatmaps, and box plots
+  - half-blocks (truecolor + 256/16/mono fallback) for horizontal bars, heatmaps, box plots, and stacked area
   - vertical-block elements `▁▂▃▄▅▆▇█` for vertical bars, histograms, and sparklines
   - Braille (2×4 dots/cell) for line and scatter
-- Story-pass with chart-specific focal detection (max-value for bars, modal-bin for histograms, largest-delta for lines, point-count for scatter, hottest cell for heatmaps, widest-IQR for box plots), gray-down palette, and embedded takeaway lines. Trust-score gate refuses to highlight when no series clearly dominates. Sparklines stay deliberately minimal — single colored line, no story overhead.
-- CLI: `tplot bar [--vertical]`, `tplot hist`, `tplot line`, `tplot scatter`, `tplot spark`, `tplot heatmap`, `tplot box`, `tplot json` (stdin).
+- Story-pass with chart-specific focal detection (max-value for bars, modal-bin for histograms, largest-delta for lines, point-count for scatter, hottest cell for heatmaps, widest-IQR for box plots, largest-total for stacked area), gray-down palette, and embedded takeaway lines. Trust-score gate refuses to highlight when no series clearly dominates. Sparklines stay deliberately minimal — single colored line, no story overhead.
+- CLI: `tplot bar [--vertical]`, `tplot hist`, `tplot line`, `tplot scatter`, `tplot spark`, `tplot heatmap`, `tplot box`, `tplot area`, `tplot json` (stdin).
 
-Stacked area arrives in a later plan. `--graphics` image-protocol output and full capability detection ship after that.
+`--graphics` image-protocol output and full capability detection ship in a later plan.
 
 ## Install
 
@@ -92,6 +92,19 @@ echo "endpoint,ms
 ```
 
 The endpoint with the widest interquartile range is highlighted; the takeaway names its IQR and overall range.
+
+```bash
+# Stacked area — cumulative breakdown over time
+echo "month,rev,region
+1,10,NA
+1,5,EMEA
+2,20,NA
+2,7,EMEA
+3,40,NA
+3,12,EMEA" | tplot area - -x month -y rev --group region
+```
+
+The series with the largest total contribution is highlighted; the takeaway names its share of the cumulative total.
 
 ## Flags
 

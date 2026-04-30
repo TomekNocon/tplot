@@ -104,10 +104,7 @@ pub fn layout_stacked_area(
         .collect();
 
     for ((x, y), g) in xs.iter().zip(ys.iter()).zip(groups.iter()) {
-        let xi = x_values
-            .iter()
-            .position(|v| (v - x).abs() < 1e-9)
-            .unwrap();
+        let xi = x_values.iter().position(|v| (v - x).abs() < 1e-9).unwrap();
         let s = series.iter_mut().find(|s| s.key == *g).unwrap();
         s.y_values[xi] += y;
         s.total += y;
@@ -160,10 +157,7 @@ mod tests {
     fn revenue_df() -> DataFrame {
         // 3 months × 2 regions. NA grows; EMEA stays flat-ish.
         DataFrame::from_columns(vec![
-            Column::new(
-                "month",
-                Series::Numbers(vec![1.0, 1.0, 2.0, 2.0, 3.0, 3.0]),
-            ),
+            Column::new("month", Series::Numbers(vec![1.0, 1.0, 2.0, 2.0, 3.0, 3.0])),
             Column::new(
                 "rev",
                 Series::Numbers(vec![10.0, 5.0, 20.0, 5.0, 40.0, 6.0]),

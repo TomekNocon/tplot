@@ -39,8 +39,7 @@ pub fn rasterize_stacked_area(
 
             // Map data-y to pixel-y (inverted: high data → low pixel y).
             let py_top = ((y_max - cum_top_data) / y_max * (ph - 1) as f64).round() as usize;
-            let py_bottom =
-                ((y_max - cum_bottom_data) / y_max * (ph - 1) as f64).round() as usize;
+            let py_bottom = ((y_max - cum_bottom_data) / y_max * (ph - 1) as f64).round() as usize;
 
             let lo = py_top.min(py_bottom);
             let hi = py_top.max(py_bottom).min(ph - 1);

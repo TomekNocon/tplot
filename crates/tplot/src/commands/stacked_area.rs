@@ -162,8 +162,6 @@ mod tests {
         assert!(out.contains("\x1b[38;2;238;123;61m"), "missing focal color");
         assert!(out.contains("NA"));
         // Takeaway phrasing.
-        assert!(
-            out.to_lowercase().contains("contributed") || out.to_lowercase().contains("most")
-        );
+        assert!(out.to_lowercase().contains("contributed") || out.to_lowercase().contains("most"));
     }
 }
