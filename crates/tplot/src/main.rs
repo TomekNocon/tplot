@@ -224,6 +224,27 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
+        Command::Violin(v) => {
+            let df = pipeline::read_dataframe(&v.input)?;
+            let (_, height) = pipeline::detected_terminal_size(v.common.width);
+            let out = commands::render_violin(
+                &df,
+                &commands::ViolinOptions {
+                    x: v.x,
+                    y: v.y,
+                    focus: v.common.focus,
+                    annotate: v.common.annotate,
+                    neutral: v.common.neutral,
+                    no_takeaway: v.common.no_takeaway,
+                    graphics: v.common.graphics,
+                    width: v.common.width,
+                    height,
+                    palette_name: v.common.palette,
+                },
+            )?;
+            print!("{out}");
+            Ok(())
+        }
         Command::Doctor => {
             let report = commands::doctor::run()?;
             print!("{report}");

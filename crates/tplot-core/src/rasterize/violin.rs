@@ -25,10 +25,10 @@ pub fn rasterize_violin(
         }
         paint_violin(v, palette, buf);
     }
-    if let Some(name) = focal {
-        if let Some(v) = layout.violins.iter().find(|v| v.series_key == name) {
-            paint_violin(v, palette, buf);
-        }
+    if let Some(name) = focal
+        && let Some(v) = layout.violins.iter().find(|v| v.series_key == name)
+    {
+        paint_violin(v, palette, buf);
     }
 }
 
