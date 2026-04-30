@@ -26,3 +26,6 @@ pub use stacked_area::{
 
 pub mod candlestick;
 pub use candlestick::{Candle, CandlestickError, CandlestickLayout, layout_candlestick};
+
+pub mod treemap;
+pub use treemap::{TreemapError, TreemapLayout, TreemapLeaf, layout_treemap};
