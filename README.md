@@ -12,7 +12,7 @@ Storytelling-first chart engine for the terminal — Rust, fast, opinionated by 
   - vertical-block elements `▁▂▃▄▅▆▇█` for vertical bars, histograms, and sparklines
   - Braille (2×4 dots/cell) for line and scatter
 - Story-pass with chart-specific focal detection (max-value for bars, modal-bin for histograms, largest-delta for lines, point-count for scatter, hottest cell for heatmaps, widest-IQR for box plots, largest-total for stacked area), gray-down palette, and embedded takeaway lines. Trust-score gate refuses to highlight when no series clearly dominates. Sparklines stay deliberately minimal — single colored line, no story overhead.
-- CLI: `tplot bar [--vertical]`, `tplot hist`, `tplot line`, `tplot scatter`, `tplot spark`, `tplot heatmap`, `tplot box`, `tplot area`, `tplot candle`, `tplot tree`, `tplot violin`, `tplot ridge`, `tplot sankey`, `tplot table`, `tplot json` (stdin).
+- CLI: `tplot bar [--vertical]`, `tplot hist`, `tplot line`, `tplot scatter`, `tplot spark`, `tplot heatmap`, `tplot box`, `tplot area`, `tplot candle`, `tplot tree`, `tplot violin`, `tplot ridge`, `tplot sankey`, `tplot table`, `tplot summary`, `tplot json` (stdin).
 - `tplot doctor` — prints a capability report (color depth, glyph set, theme, graphics-protocol detection). Run it once to see how `tplot` views your terminal.
 - `--graphics auto|kitty|iterm2|none` — emit a real PNG via the Kitty or iTerm2 inline-image protocol. `auto` picks the best protocol detected by probing; `none` (default) keeps the half-blocks/Braille text rendering.
 
@@ -180,6 +180,25 @@ ps -A -o user,pid,rss,%cpu,comm | tplot table - --bars rss --sort rss --top 15
 ```
 
 Box-drawn borders (square or `--rounded`), columns auto-typed (numbers right-aligned with thousands separators, booleans rendered as `✓`/`✗` and centered, text left-aligned). The `--bars` column gets an inline `▁▂▃▄▅▆▇█` bar proportional to its column max. The row with the highest value in the bars column lights up in burnt orange when it clearly dominates (trust-score gate); the rest stay context-gray.
+
+```bash
+# Single-line data summary — always inline-friendly in Claude Code
+echo "v
+10
+35
+80
+210" | tplot summary - -y v
+# → [4] ▁▃▅█ → median=57 max=210 (#4)
+
+# Categorical summary
+echo "lang,lines
+rust,1832
+shell,541
+yaml,128" | tplot summary - -x lang -y lines
+# → [3 cats] rust(1832) shell(541) yaml(128) — rust 3.4× median
+```
+
+The `summary` chart always emits exactly one line — packed with an embedded sparkline plus headline stats — so it renders fully inline in conversational tools (Claude Code) without triggering multi-line truncation. Two modes: sequence (`-y` only) treats the column as an ordered series; categorical (`-x` + `-y`) ranks categories with focal-orange highlighting on the dominant entry.
 
 ```bash
 # Inspect what tplot detected about your terminal

@@ -1,8 +1,8 @@
 use crate::commands::{
     AreaOptions, BoxOptions, CandleOptions, HeatmapOptions, HistogramOptions, LineOptions,
-    RenderOptions, RidgeOptions, SankeyOptions, ScatterOptions, SparkOptions, TableOptions,
-    TreeOptions, ViolinOptions, render_bar, render_boxplot, render_heatmap, render_histogram,
-    render_line, render_scatter, render_stacked_area,
+    RenderOptions, RidgeOptions, SankeyOptions, ScatterOptions, SparkOptions, SummaryOptions,
+    TableOptions, TreeOptions, ViolinOptions, render_bar, render_boxplot, render_heatmap,
+    render_histogram, render_line, render_scatter, render_stacked_area,
 };
 use anyhow::{Result, anyhow};
 use tplot_core::input::parse_json_str;
@@ -405,10 +405,26 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             let _ = canvas_h;
             crate::commands::render_table(&parsed.dataframe, &opts)
         }
-        ChartKind::Summary { .. } => {
+        ChartKind::Summary { top } => {
+            let x = match spec.x {
+                Axis::Column(c) if c != "__sequence__" => Some(c),
+                _ => None,
+            };
+            let y = match spec.y {
+                Axis::Column(c) => c,
+                _ => return Err(anyhow!("inline y axis not supported in v1")),
+            };
+            let opts = SummaryOptions {
+                x,
+                y,
+                top: top.or(Some(5)),
+                palette_name: "signature".into(),
+                annotate: spec.story.annotation,
+                neutral: !spec.story.enabled,
+            };
             let _ = canvas_w;
             let _ = canvas_h;
-            Err(anyhow!("summary JSON dispatch lands in plan 13.6 task 5"))
+            crate::commands::render_summary(&parsed.dataframe, &opts)
         }
     }
 }

@@ -1,0 +1,5 @@
+---
+source: crates/tplot/tests/e2e_summary.rs
+expression: strip_ansi(&out)
+---
+[5 cats] rust(1832) markdown(892) shell(541) yaml(128) toml(89) — rust 3.4× median

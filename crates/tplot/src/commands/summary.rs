@@ -6,8 +6,8 @@ use tplot_render::ansi::{fg, reset};
 
 #[derive(Debug, Clone, Default)]
 pub struct SummaryOptions {
-    pub x: Option<String>,    // categorical column (categorical mode if present)
-    pub y: String,            // numeric column (always required)
+    pub x: Option<String>, // categorical column (categorical mode if present)
+    pub y: String,         // numeric column (always required)
     pub top: Option<usize>,
     pub palette_name: String,
     pub annotate: Option<String>,
@@ -16,14 +16,7 @@ pub struct SummaryOptions {
 
 const SPARK_WIDTH: usize = 12;
 const GLYPHS: [char; 9] = [
-    ' ',
-    '\u{2581}',
-    '\u{2582}',
-    '\u{2583}',
-    '\u{2584}',
-    '\u{2585}',
-    '\u{2586}',
-    '\u{2587}',
+    ' ', '\u{2581}', '\u{2582}', '\u{2583}', '\u{2584}', '\u{2585}', '\u{2586}', '\u{2587}',
     '\u{2588}',
 ];
 
@@ -36,11 +29,7 @@ pub fn render_summary(df: &DataFrame, opts: &SummaryOptions) -> Result<String> {
 
     if opts.neutral {
         // Neutral mode just prints the take-away annotation if present, or "ok".
-        return Ok(opts
-            .annotate
-            .clone()
-            .unwrap_or_else(|| "(neutral)".into())
-            + "\n");
+        return Ok(opts.annotate.clone().unwrap_or_else(|| "(neutral)".into()) + "\n");
     }
 
     // Read the numeric y column.
@@ -290,7 +279,10 @@ mod tests {
                 )
             })
             .collect::<std::collections::HashSet<_>>();
-        assert!(distinct.len() >= 3, "expected ≥3 distinct glyphs: {distinct:?}");
+        assert!(
+            distinct.len() >= 3,
+            "expected ≥3 distinct glyphs: {distinct:?}"
+        );
     }
 
     #[test]
