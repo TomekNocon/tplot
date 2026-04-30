@@ -44,6 +44,8 @@ pub enum Command {
     Sankey(SankeyArgs),
     /// Pretty-printed table with inline bars and focal-row highlighting.
     Table(TableArgs),
+    /// Single-line data summary with embedded sparkline. Optimized for inline use.
+    Summary(SummaryArgs),
     /// Probe the terminal and print a capability report.
     Doctor,
     /// Read a JSON ChartSpec from stdin and render it.
@@ -282,6 +284,23 @@ pub struct TableArgs {
     /// Use rounded corners on the box border.
     #[arg(long)]
     pub rounded: bool,
+    #[command(flatten)]
+    pub common: CommonStoryArgs,
+}
+
+#[derive(Args, Debug)]
+pub struct SummaryArgs {
+    /// Path to CSV or JSON input. Use `-` for stdin.
+    pub input: String,
+    /// Optional categorical column. Without it, the y column is treated as a sequence.
+    #[arg(short = 'x')]
+    pub x: Option<String>,
+    /// Numeric column to summarize.
+    #[arg(short = 'y')]
+    pub y: String,
+    /// In categorical mode, keep only the top N entries (default: 5).
+    #[arg(long)]
+    pub top: Option<usize>,
     #[command(flatten)]
     pub common: CommonStoryArgs,
 }
@@ -628,6 +647,22 @@ mod tests {
         match args.command {
             Command::Bar(b) => assert_eq!(b.common.graphics, "none"),
             _ => panic!(),
+        }
+    }
+
+    #[test]
+    fn parses_summary_subcommand() {
+        let args = Cli::parse_from([
+            "tplot", "summary", "data.csv", "-x", "category", "-y", "value", "--top", "5",
+        ]);
+        match args.command {
+            Command::Summary(s) => {
+                assert_eq!(s.input, "data.csv");
+                assert_eq!(s.x.as_deref(), Some("category"));
+                assert_eq!(s.y, "value");
+                assert_eq!(s.top, Some(5));
+            }
+            _ => panic!("expected Summary"),
         }
     }
 
