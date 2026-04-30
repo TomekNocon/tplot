@@ -14,3 +14,6 @@ pub mod rasterize;
 
 pub mod stats;
 pub use stats::{FiveNumberSummary, five_number_summary, quantile};
+
+pub mod squarify;
+pub use squarify::{Rect, squarify};
