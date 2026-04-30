@@ -1,3 +1,4 @@
+use crate::Theme;
 use crate::color::RgbColor;
 use serde::{Deserialize, Serialize};
 
@@ -18,21 +19,49 @@ impl Palette {
         }
     }
 
-    pub fn context_color(self) -> RgbColor {
-        // Desaturated context color. All palettes share the same gray.
-        RgbColor {
-            r: 0x76,
-            g: 0x76,
-            b: 0x76,
+    /// Theme-aware desaturated context color. On dark backgrounds, returns a
+    /// medium gray (`#767676`). On light backgrounds, returns a darker gray
+    /// (`#4a4a4a`) so it remains legible against white.
+    pub fn context_color_for(self, theme: Theme) -> RgbColor {
+        match theme {
+            Theme::Dark => RgbColor {
+                r: 0x76,
+                g: 0x76,
+                b: 0x76,
+            },
+            Theme::Light => RgbColor {
+                r: 0x4a,
+                g: 0x4a,
+                b: 0x4a,
+            },
         }
     }
 
-    pub fn dim_context_color(self) -> RgbColor {
-        RgbColor {
-            r: 0x4f,
-            g: 0x4f,
-            b: 0x4f,
+    /// Backwards-compatible default — returns the dark-theme context gray.
+    pub fn context_color(self) -> RgbColor {
+        self.context_color_for(Theme::Dark)
+    }
+
+    /// Theme-aware dimmer variant of [`context_color`]. Used for axis ticks and
+    /// other secondary chrome.
+    pub fn dim_context_color_for(self, theme: Theme) -> RgbColor {
+        match theme {
+            Theme::Dark => RgbColor {
+                r: 0x4f,
+                g: 0x4f,
+                b: 0x4f,
+            },
+            Theme::Light => RgbColor {
+                r: 0x96,
+                g: 0x96,
+                b: 0x96,
+            },
         }
+    }
+
+    /// Backwards-compatible default — returns the dark-theme dim context gray.
+    pub fn dim_context_color(self) -> RgbColor {
+        self.dim_context_color_for(Theme::Dark)
     }
 
     pub fn from_name(name: &str) -> Result<Self, UnknownPalette> {
@@ -79,6 +108,39 @@ mod tests {
         let ctx = p.context_color();
         assert_eq!(ctx.r, ctx.g);
         assert_eq!(ctx.g, ctx.b);
+    }
+
+    #[test]
+    fn context_gray_for_dark_is_lighter_than_for_light() {
+        let dark = Palette::Signature.context_color_for(Theme::Dark);
+        let light = Palette::Signature.context_color_for(Theme::Light);
+        // On dark BG, gray should be lighter (higher RGB values) for legibility;
+        // on light BG, gray should be darker.
+        assert!(dark.r > light.r);
+    }
+
+    #[test]
+    fn context_color_default_path_is_dark() {
+        // Backwards-compatible call defaults to Theme::Dark.
+        let default = Palette::Signature.context_color();
+        let dark = Palette::Signature.context_color_for(Theme::Dark);
+        assert_eq!(default, dark);
+    }
+
+    #[test]
+    fn dim_context_gray_for_dark_is_darker_than_for_light() {
+        let dark = Palette::Signature.dim_context_color_for(Theme::Dark);
+        let light = Palette::Signature.dim_context_color_for(Theme::Light);
+        // Dim is the inverted relationship: on dark BG, dim is darker; on
+        // light BG, dim is lighter.
+        assert!(light.r > dark.r);
+    }
+
+    #[test]
+    fn dim_context_color_default_path_is_dark() {
+        let default = Palette::Signature.dim_context_color();
+        let dark = Palette::Signature.dim_context_color_for(Theme::Dark);
+        assert_eq!(default, dark);
     }
 
     #[test]
