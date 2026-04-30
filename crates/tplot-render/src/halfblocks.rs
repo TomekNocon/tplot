@@ -16,33 +16,68 @@ pub fn render_halfblocks(buf: &PixelBuffer, caps: Capabilities) -> String {
         let py_top = cy * 2;
         let py_bot = py_top + 1;
 
+        // Track active fg/bg color state across cells in this row. Emit a
+        // color escape only when the cell needs a value different from what
+        // the terminal already has set, and reset once at end of line.
+        let mut last_fg: Option<RgbColor> = None;
+        let mut last_bg: Option<RgbColor> = None;
+
         for cx in 0..cells_w {
             let top = buf.get(cx, py_top);
             let bot = buf.get(cx, py_bot);
 
-            match (top, bot) {
-                (None, None) => out.push(' '),
-                (Some(t), Some(b)) if t == b => {
-                    write!(out, "{}{}{}", fg(t, caps.color_depth), FULL, reset()).unwrap();
-                }
-                (Some(t), Some(b)) => {
-                    write!(
-                        out,
-                        "{}{}{}{}",
-                        fg(t, caps.color_depth),
-                        bg(b, caps.color_depth),
-                        UPPER,
-                        reset()
-                    )
-                    .unwrap();
-                }
-                (Some(t), None) => {
-                    write!(out, "{}{}{}", fg(t, caps.color_depth), UPPER, reset()).unwrap();
-                }
-                (None, Some(b)) => {
-                    write!(out, "{}{}{}", fg(b, caps.color_depth), LOWER, reset()).unwrap();
-                }
+            // Determine which fg/bg this cell needs (None = "don't care").
+            // Empty cells short-circuit and clear the state by emitting reset.
+            let (need_fg, need_bg, glyph): (Option<RgbColor>, Option<RgbColor>, char) =
+                match (top, bot) {
+                    (None, None) => {
+                        if last_fg.is_some() || last_bg.is_some() {
+                            out.push_str(reset());
+                            last_fg = None;
+                            last_bg = None;
+                        }
+                        out.push(' ');
+                        continue;
+                    }
+                    (Some(t), Some(b)) if t == b => (Some(t), None, FULL),
+                    (Some(t), Some(b)) => (Some(t), Some(b), UPPER),
+                    (Some(t), None) => (Some(t), None, UPPER),
+                    (None, Some(b)) => (Some(b), None, LOWER),
+                };
+
+            // Emit fg only if it changed.
+            if let Some(c) = need_fg
+                && last_fg != Some(c)
+            {
+                write!(out, "{}", fg(c, caps.color_depth)).unwrap();
+                last_fg = Some(c);
             }
+            // Emit bg only if it changed. When the cell needs no bg but the
+            // terminal still has one set, full-reset and re-emit fg so we
+            // don't carry stale bg into single-side cells.
+            match (need_bg, last_bg) {
+                (Some(c), prev) if prev != Some(c) => {
+                    write!(out, "{}", bg(c, caps.color_depth)).unwrap();
+                    last_bg = Some(c);
+                }
+                (None, Some(_)) => {
+                    out.push_str(reset());
+                    last_fg = None;
+                    last_bg = None;
+                    if let Some(c) = need_fg {
+                        write!(out, "{}", fg(c, caps.color_depth)).unwrap();
+                        last_fg = Some(c);
+                    }
+                }
+                _ => {}
+            }
+
+            out.push(glyph);
+        }
+
+        // End-of-line reset (only if there's active state to clear).
+        if last_fg.is_some() || last_bg.is_some() {
+            out.push_str(reset());
         }
         out.push('\n');
     }
