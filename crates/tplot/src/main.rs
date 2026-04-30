@@ -29,6 +29,7 @@ fn main() -> Result<()> {
                     width: b.common.width,
                     height: h,
                     palette_name: b.common.palette,
+                    graphics: b.common.graphics,
                 },
             )?;
             print!("{out}");
@@ -49,6 +50,7 @@ fn main() -> Result<()> {
                     width: h.common.width,
                     height,
                     palette_name: h.common.palette,
+                    graphics: h.common.graphics,
                 },
             )?;
             print!("{out}");
@@ -70,6 +72,7 @@ fn main() -> Result<()> {
                     width: l.common.width,
                     height,
                     palette_name: l.common.palette,
+                    graphics: l.common.graphics,
                 },
             )?;
             print!("{out}");
@@ -91,6 +94,7 @@ fn main() -> Result<()> {
                     width: s.common.width,
                     height,
                     palette_name: s.common.palette,
+                    graphics: s.common.graphics,
                 },
             )?;
             print!("{out}");
@@ -131,6 +135,7 @@ fn main() -> Result<()> {
                     no_takeaway: h.common.no_takeaway,
                     width: h.common.width,
                     height,
+                    graphics: h.common.graphics,
                 },
             )?;
             print!("{out}");
@@ -151,6 +156,7 @@ fn main() -> Result<()> {
                     width: b.common.width,
                     height,
                     palette_name: b.common.palette,
+                    graphics: b.common.graphics,
                 },
             )?;
             print!("{out}");
@@ -172,6 +178,7 @@ fn main() -> Result<()> {
                     width: a.common.width,
                     height,
                     palette_name: a.common.palette,
+                    graphics: a.common.graphics,
                 },
             )?;
             print!("{out}");

@@ -1,10 +1,10 @@
-use crate::pipeline::require_minimum_width;
+use crate::pipeline::{require_minimum_width, resolve_graphics};
 use anyhow::{Result, anyhow};
 use tplot_core::PixelBuffer;
 use tplot_core::dataframe::{Column, DataFrame, Series};
 use tplot_core::layout::{layout_horizontal_bar, layout_vertical_bar};
 use tplot_core::rasterize::{rasterize_bar, rasterize_vertical};
-use tplot_protocol::{Capabilities, FocusMode, Palette, StoryConfig};
+use tplot_protocol::{Capabilities, FocusMode, GraphicsProtocol, Palette, StoryConfig};
 use tplot_render::{render_halfblocks, render_vertical_blocks};
 use tplot_story::{SeriesPoint, run_bar_story_pass_with_theme};
 
@@ -22,6 +22,39 @@ pub struct RenderOptions {
     /// Used directly in tests; in production callers pass the detected height.
     pub height: usize,
     pub palette_name: String,
+    pub graphics: String,
+}
+
+impl Default for RenderOptions {
+    fn default() -> Self {
+        Self {
+            x: String::new(),
+            y: String::new(),
+            group: None,
+            vertical: false,
+            focus: None,
+            annotate: None,
+            neutral: false,
+            no_takeaway: false,
+            width: None,
+            height: 14,
+            palette_name: "signature".into(),
+            graphics: "none".into(),
+        }
+    }
+}
+
+/// Helper: emit graphics bytes followed by an optional takeaway line.
+/// PNG bytes carried inside iTerm2/Kitty escapes are pure base64 (ASCII), so
+/// the `Vec<u8>` is always valid UTF-8.
+fn graphics_output(bytes: Vec<u8>, takeaway: Option<&str>) -> String {
+    let mut out = String::from_utf8_lossy(&bytes).into_owned();
+    out.push('\n');
+    if let Some(t) = takeaway {
+        out.push_str(t);
+        out.push('\n');
+    }
+    out
 }
 
 pub fn render_bar(df: &DataFrame, opts: &RenderOptions) -> Result<String> {
@@ -111,6 +144,13 @@ pub fn render_bar(df: &DataFrame, opts: &RenderOptions) -> Result<String> {
     // Buffer holds ONLY the plot area. Margins are added by the composer.
     let mut buf = PixelBuffer::new(layout.plot_box.pixel_width, layout.plot_box.pixel_height);
     rasterize_bar(&layout, &story.palette_map, &mut buf);
+
+    // ----- graphics path ---------------------------------------------------
+    let protocol = resolve_graphics(&opts.graphics, caps);
+    if protocol != GraphicsProtocol::None {
+        let bytes = tplot_render::graphics::render_graphics(&buf, protocol, 6);
+        return Ok(graphics_output(bytes, story.takeaway.as_deref()));
+    }
 
     // ----- render to halfblocks (one cell row per source cell row) ---------
     let body = render_halfblocks(&buf, caps);
@@ -248,6 +288,13 @@ fn render_vertical_bar(df: &DataFrame, opts: &RenderOptions) -> Result<String> {
     let mut buf = PixelBuffer::new(layout.plot_box.pixel_width, layout.plot_box.pixel_height);
     rasterize_vertical(&layout, &story.palette_map, &mut buf);
 
+    // ----- graphics path ---------------------------------------------------
+    let protocol = resolve_graphics(&opts.graphics, caps);
+    if protocol != GraphicsProtocol::None {
+        let bytes = tplot_render::graphics::render_graphics(&buf, protocol, 6);
+        return Ok(graphics_output(bytes, story.takeaway.as_deref()));
+    }
+
     // ----- render to vertical-blocks ---------------------------------------
     let body = render_vertical_blocks(&buf, caps);
     let body_lines: Vec<&str> = body.lines().collect();
@@ -338,6 +385,7 @@ mod tests {
             width: Some(80),
             height: 14,
             palette_name: "signature".into(),
+            graphics: "none".into(),
         };
         let out = render_bar(&df, &opts).unwrap();
         // Should contain at least one truecolor escape and the takeaway.
@@ -365,6 +413,7 @@ mod tests {
             width: Some(60),
             height: 16,
             palette_name: "signature".into(),
+            graphics: "none".into(),
         };
         let out = render_bar(&df, &opts).unwrap();
         // Apr is the max -> focal color (burnt orange) should appear.
@@ -396,6 +445,7 @@ mod tests {
             width: Some(60),
             height: 8,
             palette_name: "signature".into(),
+            graphics: "none".into(),
         };
         let _ = render_bar(&df, &opts).expect("should render successfully under any theme");
     }
@@ -416,6 +466,7 @@ mod tests {
             width: Some(60),
             height: 8,
             palette_name: "signature".into(),
+            graphics: "none".into(),
         };
         let out = render_bar(&df, &opts).unwrap();
         assert!(!out.contains("standout"));

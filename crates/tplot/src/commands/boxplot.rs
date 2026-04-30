@@ -1,10 +1,10 @@
-use crate::pipeline::require_minimum_width;
+use crate::pipeline::{require_minimum_width, resolve_graphics};
 use anyhow::{Result, anyhow};
 use tplot_core::PixelBuffer;
 use tplot_core::dataframe::DataFrame;
 use tplot_core::layout::layout_boxplot;
 use tplot_core::rasterize::rasterize_boxplot;
-use tplot_protocol::{Capabilities, FocusMode, Palette, StoryConfig};
+use tplot_protocol::{Capabilities, FocusMode, GraphicsProtocol, Palette, StoryConfig};
 use tplot_render::render_halfblocks;
 use tplot_story::{boxplot_takeaway, focal::SeriesSpread, run_boxplot_story_pass_with_theme};
 
@@ -19,6 +19,7 @@ pub struct BoxOptions {
     pub width: Option<usize>,
     pub height: usize,
     pub palette_name: String,
+    pub graphics: String,
 }
 
 pub fn render_boxplot(df: &DataFrame, opts: &BoxOptions) -> Result<String> {
@@ -60,6 +61,44 @@ pub fn render_boxplot(df: &DataFrame, opts: &BoxOptions) -> Result<String> {
         &story.palette_map,
         &mut buf,
     );
+
+    // Build the takeaway once — both paths use it (graphics path appends it
+    // below the image; text path appends it after the chart body).
+    let takeaway_text: Option<String> = if opts.no_takeaway {
+        None
+    } else {
+        Some(if let Some(custom) = &opts.annotate {
+            custom.clone()
+        } else if let Some(name) = &story.focal {
+            let el = layout.boxes.iter().find(|b| b.label == *name);
+            if let Some(el) = el {
+                boxplot_takeaway(
+                    Some(name),
+                    el.summary.q1,
+                    el.summary.q3,
+                    el.summary.min,
+                    el.summary.max,
+                )
+            } else {
+                boxplot_takeaway(None, 0.0, 0.0, 0.0, 0.0)
+            }
+        } else {
+            boxplot_takeaway(None, 0.0, 0.0, 0.0, 0.0)
+        })
+    };
+
+    // ----- graphics path ---------------------------------------------------
+    let protocol = resolve_graphics(&opts.graphics, caps);
+    if protocol != GraphicsProtocol::None {
+        let bytes = tplot_render::graphics::render_graphics(&buf, protocol, 6);
+        let mut out = String::from_utf8_lossy(&bytes).into_owned();
+        out.push('\n');
+        if let Some(t) = &takeaway_text {
+            out.push_str(t);
+            out.push('\n');
+        }
+        return Ok(out);
+    }
 
     // ----- render ----------------------------------------------------------
     let body = render_halfblocks(&buf, caps);
@@ -109,28 +148,10 @@ pub fn render_boxplot(df: &DataFrame, opts: &BoxOptions) -> Result<String> {
     out.push('\n');
 
     // ----- takeaway --------------------------------------------------------
-    if !opts.no_takeaway {
+    if let Some(t) = &takeaway_text {
         out.push('\n');
         out.push_str(&" ".repeat(layout.left_margin + 1));
-        let takeaway = if let Some(custom) = &opts.annotate {
-            custom.clone()
-        } else if let Some(name) = &story.focal {
-            let el = layout.boxes.iter().find(|b| b.label == *name);
-            if let Some(el) = el {
-                boxplot_takeaway(
-                    Some(name),
-                    el.summary.q1,
-                    el.summary.q3,
-                    el.summary.min,
-                    el.summary.max,
-                )
-            } else {
-                boxplot_takeaway(None, 0.0, 0.0, 0.0, 0.0)
-            }
-        } else {
-            boxplot_takeaway(None, 0.0, 0.0, 0.0, 0.0)
-        };
-        out.push_str(&takeaway);
+        out.push_str(t);
         out.push('\n');
     }
 
@@ -159,6 +180,7 @@ mod tests {
             width: Some(80),
             height: 16,
             palette_name: "signature".into(),
+            graphics: "none".into(),
         };
         let out = render_boxplot(&df, &opts).unwrap();
         // /orders should be focal → burnt orange escape.

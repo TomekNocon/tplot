@@ -1,10 +1,10 @@
-use crate::pipeline::require_minimum_width;
+use crate::pipeline::{require_minimum_width, resolve_graphics};
 use anyhow::{Result, anyhow};
 use tplot_core::PixelBuffer;
 use tplot_core::dataframe::DataFrame;
 use tplot_core::layout::layout_heatmap;
 use tplot_core::rasterize::rasterize_heatmap;
-use tplot_protocol::{Capabilities, HeatRamp};
+use tplot_protocol::{Capabilities, GraphicsProtocol, HeatRamp};
 use tplot_render::render_halfblocks;
 use tplot_story::heatmap_takeaway;
 
@@ -18,6 +18,7 @@ pub struct HeatmapOptions {
     pub no_takeaway: bool,
     pub width: Option<usize>,
     pub height: usize,
+    pub graphics: String,
 }
 
 pub fn render_heatmap(df: &DataFrame, opts: &HeatmapOptions) -> Result<String> {
@@ -32,6 +33,39 @@ pub fn render_heatmap(df: &DataFrame, opts: &HeatmapOptions) -> Result<String> {
     rasterize_heatmap(&layout, &mut buf);
 
     let caps = Capabilities::from_vars(|name| std::env::var(name).ok());
+
+    // Build the takeaway (heatmap doesn't run a story-pass, so derive from
+    // layout.max_cell). Both paths reuse this.
+    let takeaway_text: Option<String> = if opts.no_takeaway {
+        None
+    } else {
+        Some(if let Some(custom) = &opts.annotate {
+            custom.clone()
+        } else if let Some((xi, yi)) = layout.max_cell {
+            let total: f64 = layout.cell_values.iter().flatten().filter_map(|c| *c).sum();
+            heatmap_takeaway(
+                Some((layout.y_labels[yi].as_str(), layout.x_labels[xi].as_str())),
+                layout.max_value,
+                total,
+            )
+        } else {
+            heatmap_takeaway(None, 0.0, 0.0)
+        })
+    };
+
+    // ----- graphics path ---------------------------------------------------
+    let protocol = resolve_graphics(&opts.graphics, caps);
+    if protocol != GraphicsProtocol::None {
+        let bytes = tplot_render::graphics::render_graphics(&buf, protocol, 6);
+        let mut out = String::from_utf8_lossy(&bytes).into_owned();
+        out.push('\n');
+        if let Some(t) = &takeaway_text {
+            out.push_str(t);
+            out.push('\n');
+        }
+        return Ok(out);
+    }
+
     let body = render_halfblocks(&buf, caps);
     let body_lines: Vec<&str> = body.lines().collect();
 
@@ -68,22 +102,10 @@ pub fn render_heatmap(df: &DataFrame, opts: &HeatmapOptions) -> Result<String> {
     out.push('\n');
 
     // Takeaway.
-    if !opts.no_takeaway {
+    if let Some(t) = &takeaway_text {
         out.push('\n');
         out.push_str(&" ".repeat(label_margin + 1));
-        let takeaway = if let Some(custom) = &opts.annotate {
-            custom.clone()
-        } else if let Some((xi, yi)) = layout.max_cell {
-            let total: f64 = layout.cell_values.iter().flatten().filter_map(|c| *c).sum();
-            heatmap_takeaway(
-                Some((layout.y_labels[yi].as_str(), layout.x_labels[xi].as_str())),
-                layout.max_value,
-                total,
-            )
-        } else {
-            heatmap_takeaway(None, 0.0, 0.0)
-        };
-        out.push_str(&takeaway);
+        out.push_str(t);
         out.push('\n');
     }
 
@@ -108,6 +130,7 @@ mod tests {
             no_takeaway: false,
             width: Some(80),
             height: 12,
+            graphics: "none".into(),
         };
         let out = render_heatmap(&df, &opts).unwrap();
         // Should include the hottest cell name.

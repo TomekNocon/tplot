@@ -1,10 +1,10 @@
-use crate::pipeline::require_minimum_width;
+use crate::pipeline::{require_minimum_width, resolve_graphics};
 use anyhow::{Result, anyhow};
 use tplot_core::PixelBuffer;
 use tplot_core::dataframe::DataFrame;
 use tplot_core::layout::layout_stacked_area;
 use tplot_core::rasterize::rasterize_stacked_area;
-use tplot_protocol::{Capabilities, FocusMode, Palette, StoryConfig};
+use tplot_protocol::{Capabilities, FocusMode, GraphicsProtocol, Palette, StoryConfig};
 use tplot_render::render_halfblocks;
 use tplot_story::{
     focal::SeriesTotal, run_stacked_area_story_pass_with_theme, stacked_area_takeaway,
@@ -22,6 +22,7 @@ pub struct AreaOptions {
     pub width: Option<usize>,
     pub height: usize,
     pub palette_name: String,
+    pub graphics: String,
 }
 
 pub fn render_stacked_area(df: &DataFrame, opts: &AreaOptions) -> Result<String> {
@@ -58,6 +59,39 @@ pub fn render_stacked_area(df: &DataFrame, opts: &AreaOptions) -> Result<String>
     // ----- rasterize -------------------------------------------------------
     let mut buf = PixelBuffer::new(layout.plot_box.pixel_width, layout.plot_box.pixel_height);
     rasterize_stacked_area(&layout, &story.palette_map, &mut buf);
+
+    // Build the takeaway once — both paths reuse it.
+    let takeaway_text: Option<String> = if opts.no_takeaway {
+        None
+    } else {
+        Some(if let Some(custom) = &opts.annotate {
+            custom.clone()
+        } else if let Some(name) = &story.focal {
+            let grand: f64 = layout.series.iter().map(|s| s.total).sum();
+            let focal_total = layout
+                .series
+                .iter()
+                .find(|s| s.key == *name)
+                .map(|s| s.total)
+                .unwrap_or(0.0);
+            stacked_area_takeaway(Some(name), focal_total, grand)
+        } else {
+            stacked_area_takeaway(None, 0.0, 0.0)
+        })
+    };
+
+    // ----- graphics path ---------------------------------------------------
+    let protocol = resolve_graphics(&opts.graphics, caps);
+    if protocol != GraphicsProtocol::None {
+        let bytes = tplot_render::graphics::render_graphics(&buf, protocol, 6);
+        let mut out = String::from_utf8_lossy(&bytes).into_owned();
+        out.push('\n');
+        if let Some(t) = &takeaway_text {
+            out.push_str(t);
+            out.push('\n');
+        }
+        return Ok(out);
+    }
 
     // ----- render ----------------------------------------------------------
     let body = render_halfblocks(&buf, caps);
@@ -111,24 +145,10 @@ pub fn render_stacked_area(df: &DataFrame, opts: &AreaOptions) -> Result<String>
     out.push('\n');
 
     // ----- takeaway --------------------------------------------------------
-    if !opts.no_takeaway {
+    if let Some(t) = &takeaway_text {
         out.push('\n');
         out.push_str(&" ".repeat(layout.left_margin + 1));
-        let takeaway = if let Some(custom) = &opts.annotate {
-            custom.clone()
-        } else if let Some(name) = &story.focal {
-            let grand: f64 = layout.series.iter().map(|s| s.total).sum();
-            let focal_total = layout
-                .series
-                .iter()
-                .find(|s| s.key == *name)
-                .map(|s| s.total)
-                .unwrap_or(0.0);
-            stacked_area_takeaway(Some(name), focal_total, grand)
-        } else {
-            stacked_area_takeaway(None, 0.0, 0.0)
-        };
-        out.push_str(&takeaway);
+        out.push_str(t);
         out.push('\n');
     }
 
@@ -158,6 +178,7 @@ mod tests {
             width: Some(80),
             height: 16,
             palette_name: "signature".into(),
+            graphics: "none".into(),
         };
         let out = render_stacked_area(&df, &opts).unwrap();
         // NA total = 70, EMEA total = 16 → NA focal in burnt orange.

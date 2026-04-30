@@ -43,6 +43,7 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
                 width: Some(canvas_w),
                 height: canvas_h,
                 palette_name: "signature".into(),
+                graphics: "none".into(),
             };
             render_bar(&parsed.dataframe, &opts)
         }
@@ -76,6 +77,7 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
                 width: Some(canvas_w),
                 height: canvas_h,
                 palette_name: "signature".into(),
+                graphics: "none".into(),
             };
             render_bar(&parsed.dataframe, &opts)
         }
@@ -102,6 +104,7 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
                 width: Some(canvas_w),
                 height: canvas_h,
                 palette_name: "signature".into(),
+                graphics: "none".into(),
             };
             render_line(&parsed.dataframe, &opts)
         }
@@ -128,6 +131,7 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
                 width: Some(canvas_w),
                 height: canvas_h,
                 palette_name: "signature".into(),
+                graphics: "none".into(),
             };
             render_scatter(&parsed.dataframe, &opts)
         }
@@ -153,6 +157,7 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
                 width: Some(canvas_w),
                 height: canvas_h,
                 palette_name: "signature".into(),
+                graphics: "none".into(),
             };
             render_histogram(&parsed.dataframe, &opts)
         }
@@ -201,6 +206,7 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
                 width: Some(canvas_w),
                 height: canvas_h,
                 palette_name: "signature".into(),
+                graphics: "none".into(),
             };
             render_boxplot(&parsed.dataframe, &opts)
         }
@@ -222,6 +228,7 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
                 no_takeaway: !spec.story.takeaway,
                 width: Some(canvas_w),
                 height: canvas_h,
+                graphics: "none".into(),
             };
             render_heatmap(&parsed.dataframe, &opts)
         }
@@ -251,6 +258,7 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
                 width: Some(canvas_w),
                 height: canvas_h,
                 palette_name: "signature".into(),
+                graphics: "none".into(),
             };
             render_stacked_area(&parsed.dataframe, &opts)
         }

@@ -1,10 +1,10 @@
-use crate::pipeline::require_minimum_width;
+use crate::pipeline::{require_minimum_width, resolve_graphics};
 use anyhow::{Result, anyhow};
 use tplot_core::PixelBuffer;
 use tplot_core::dataframe::DataFrame;
 use tplot_core::layout::layout_scatter;
 use tplot_core::rasterize::rasterize_scatter;
-use tplot_protocol::{Capabilities, FocusMode, Palette, StoryConfig};
+use tplot_protocol::{Capabilities, FocusMode, GraphicsProtocol, Palette, StoryConfig};
 use tplot_render::render_braille;
 use tplot_story::{SeriesPoint, run_bar_story_pass_with_theme};
 
@@ -20,6 +20,7 @@ pub struct ScatterOptions {
     pub width: Option<usize>,
     pub height: usize,
     pub palette_name: String,
+    pub graphics: String,
 }
 
 pub fn render_scatter(df: &DataFrame, opts: &ScatterOptions) -> Result<String> {
@@ -65,6 +66,19 @@ pub fn render_scatter(df: &DataFrame, opts: &ScatterOptions) -> Result<String> {
         &story.palette_map,
         &mut buf,
     );
+
+    // ----- graphics path ---------------------------------------------------
+    let protocol = resolve_graphics(&opts.graphics, caps);
+    if protocol != GraphicsProtocol::None {
+        let bytes = tplot_render::graphics::render_graphics(&buf, protocol, 6);
+        let mut out = String::from_utf8_lossy(&bytes).into_owned();
+        out.push('\n');
+        if let Some(t) = &story.takeaway {
+            out.push_str(t);
+            out.push('\n');
+        }
+        return Ok(out);
+    }
 
     let body = render_braille(&buf, caps);
     let body_lines: Vec<&str> = body.lines().collect();
@@ -129,6 +143,7 @@ mod tests {
             width: Some(80),
             height: 16,
             palette_name: "signature".into(),
+            graphics: "none".into(),
         };
         let out = render_scatter(&df, &opts).unwrap();
         // Should contain at least one Braille glyph.
