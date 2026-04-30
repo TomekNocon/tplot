@@ -34,6 +34,9 @@ pub use violin::{ViolinOptions, render_violin};
 pub mod ridgeline;
 pub use ridgeline::{RidgeOptions, render_ridgeline};
 
+pub mod sankey;
+pub use sankey::{SankeyOptions, render_sankey};
+
 pub mod json;
 pub use json::render_from_json;
 
