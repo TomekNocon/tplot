@@ -1,4 +1,4 @@
-use crate::pipeline::detected_terminal_size;
+use crate::pipeline::require_minimum_width;
 use anyhow::{Result, anyhow};
 use tplot_core::PixelBuffer;
 use tplot_core::dataframe::DataFrame;
@@ -24,7 +24,7 @@ pub struct ScatterOptions {
 
 pub fn render_scatter(df: &DataFrame, opts: &ScatterOptions) -> Result<String> {
     let palette = Palette::from_name(&opts.palette_name).map_err(|e| anyhow!(e.to_string()))?;
-    let (canvas_w, _) = detected_terminal_size(opts.width);
+    let (canvas_w, _) = require_minimum_width(opts.width)?;
     let canvas_h = opts.height;
 
     let layout = layout_scatter(

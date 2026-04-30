@@ -1,4 +1,4 @@
-use crate::pipeline::detected_terminal_size;
+use crate::pipeline::require_minimum_width;
 use anyhow::{Result, anyhow};
 use tplot_core::PixelBuffer;
 use tplot_core::dataframe::{Column, DataFrame, Series};
@@ -75,7 +75,7 @@ pub fn render_bar(df: &DataFrame, opts: &RenderOptions) -> Result<String> {
     let story = run_bar_story_pass_with_theme(&series_points, &story_cfg, palette, caps.theme);
 
     // ----- layout ----------------------------------------------------------
-    let (canvas_w, _) = detected_terminal_size(opts.width);
+    let (canvas_w, _) = require_minimum_width(opts.width)?;
     let canvas_h = opts.height;
 
     let agg_df = DataFrame::from_columns(vec![
@@ -198,7 +198,7 @@ fn render_vertical_bar(df: &DataFrame, opts: &RenderOptions) -> Result<String> {
     let story = run_bar_story_pass_with_theme(&series_points, &story_cfg, palette, caps.theme);
 
     // ----- layout ----------------------------------------------------------
-    let (canvas_w, _) = detected_terminal_size(opts.width);
+    let (canvas_w, _) = require_minimum_width(opts.width)?;
     let canvas_h = opts.height;
     let agg_df = DataFrame::from_columns(vec![
         Column::new(
