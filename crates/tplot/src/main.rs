@@ -245,6 +245,10 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
+        Command::Ridge(_r) => {
+            // Wired in plan 11.5 task 6.
+            anyhow::bail!("ridge command not yet wired");
+        }
         Command::Doctor => {
             let report = commands::doctor::run()?;
             print!("{report}");

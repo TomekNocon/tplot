@@ -38,6 +38,8 @@ pub enum Command {
     Tree(TreeArgs),
     /// Violin plot — KDE-based distribution shape per category.
     Violin(ViolinArgs),
+    /// Ridgeline (joy-plot) chart — stacked KDEs per group along a categorical axis.
+    Ridge(RidgeArgs),
     /// Probe the terminal and print a capability report.
     Doctor,
     /// Read a JSON ChartSpec from stdin and render it.
@@ -225,6 +227,20 @@ pub struct ViolinArgs {
     /// Numeric column for the value distribution.
     #[arg(short = 'y')]
     pub y: String,
+    #[command(flatten)]
+    pub common: CommonStoryArgs,
+}
+
+#[derive(Args, Debug)]
+pub struct RidgeArgs {
+    /// Path to CSV or JSON input. Use `-` for stdin.
+    pub input: String,
+    /// Numeric value column (the x-axis of each ridge).
+    #[arg(short = 'x')]
+    pub x: String,
+    /// Categorical column whose unique values become the stacked rows.
+    #[arg(long)]
+    pub group: String,
     #[command(flatten)]
     pub common: CommonStoryArgs,
 }
@@ -492,6 +508,21 @@ mod tests {
                 assert_eq!(v.y, "ms");
             }
             _ => panic!("expected Violin"),
+        }
+    }
+
+    #[test]
+    fn parses_ridge_subcommand() {
+        let args = Cli::parse_from([
+            "tplot", "ridge", "data.csv", "-x", "ms", "--group", "month",
+        ]);
+        match args.command {
+            Command::Ridge(r) => {
+                assert_eq!(r.input, "data.csv");
+                assert_eq!(r.x, "ms");
+                assert_eq!(r.group, "month");
+            }
+            _ => panic!("expected Ridge"),
         }
     }
 
