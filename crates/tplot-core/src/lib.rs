@@ -25,3 +25,8 @@ pub mod sankey_graph;
 pub use sankey_graph::{
     RawEdge, SankeyEdge, SankeyGraph, SankeyGraphError, SankeyNode, build_graph,
 };
+
+pub mod table;
+pub use table::{
+    ColumnType, TableColumn, TableLayout, TableLayoutConfig, TableLayoutError, layout_table,
+};
