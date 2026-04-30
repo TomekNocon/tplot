@@ -32,6 +32,8 @@ pub enum Command {
     /// Render a stacked-area chart. Each group fills from the cumulative
     /// baseline up to its cumulative top, in first-seen order.
     Area(AreaArgs),
+    /// OHLC candlestick chart. Requires four numeric columns: open, high, low, close.
+    Candle(CandleArgs),
     /// Probe the terminal and print a capability report.
     Doctor,
     /// Read a JSON ChartSpec from stdin and render it.
@@ -151,6 +153,29 @@ pub struct BoxArgs {
     /// Numeric column for the value distribution.
     #[arg(short = 'y')]
     pub y: String,
+    #[command(flatten)]
+    pub common: CommonStoryArgs,
+}
+
+#[derive(Args, Debug)]
+pub struct CandleArgs {
+    /// Path to CSV or JSON input. Use `-` for stdin.
+    pub input: String,
+    /// X-axis column (typically date or index).
+    #[arg(short = 'x')]
+    pub x: String,
+    /// Numeric column with opening price.
+    #[arg(long)]
+    pub open: String,
+    /// Numeric column with intraday high.
+    #[arg(long)]
+    pub high: String,
+    /// Numeric column with intraday low.
+    #[arg(long)]
+    pub low: String,
+    /// Numeric column with closing price.
+    #[arg(long)]
+    pub close: String,
     #[command(flatten)]
     pub common: CommonStoryArgs,
 }
@@ -379,6 +404,36 @@ mod tests {
                 assert_eq!(a.group, "region");
             }
             _ => panic!("expected Area"),
+        }
+    }
+
+    #[test]
+    fn parses_candle_subcommand() {
+        let args = Cli::parse_from([
+            "tplot",
+            "candle",
+            "stocks.csv",
+            "-x",
+            "date",
+            "--open",
+            "o",
+            "--high",
+            "h",
+            "--low",
+            "l",
+            "--close",
+            "c",
+        ]);
+        match args.command {
+            Command::Candle(c) => {
+                assert_eq!(c.input, "stocks.csv");
+                assert_eq!(c.x, "date");
+                assert_eq!(c.open, "o");
+                assert_eq!(c.high, "h");
+                assert_eq!(c.low, "l");
+                assert_eq!(c.close, "c");
+            }
+            _ => panic!("expected Candle"),
         }
     }
 
