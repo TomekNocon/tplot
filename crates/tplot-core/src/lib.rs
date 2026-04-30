@@ -20,3 +20,8 @@ pub use squarify::{Rect, squarify};
 
 pub mod kde;
 pub use kde::{kde_at, kde_evaluate, silverman_bandwidth};
+
+pub mod sankey_graph;
+pub use sankey_graph::{
+    RawEdge, SankeyEdge, SankeyGraph, SankeyGraphError, SankeyNode, build_graph,
+};
