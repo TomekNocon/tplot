@@ -51,20 +51,22 @@ pub fn render_vertical_blocks(buf: &PixelBuffer, caps: Capabilities) -> String {
                 }
             }
 
-            if filled == 0 || color.is_none() {
-                if last_fg.is_some() {
-                    out.push_str(reset());
-                    last_fg = None;
+            match color {
+                Some(c) if filled > 0 => {
+                    let glyph = GLYPHS[filled.min(8)];
+                    if last_fg != Some(c) {
+                        let _ = write!(out, "{}", fg(c, caps.color_depth));
+                        last_fg = Some(c);
+                    }
+                    out.push(glyph);
                 }
-                out.push(' ');
-            } else {
-                let glyph = GLYPHS[filled.min(8)];
-                let c = color.unwrap();
-                if last_fg != Some(c) {
-                    let _ = write!(out, "{}", fg(c, caps.color_depth));
-                    last_fg = Some(c);
+                _ => {
+                    if last_fg.is_some() {
+                        out.push_str(reset());
+                        last_fg = None;
+                    }
+                    out.push(' ');
                 }
-                out.push(glyph);
             }
         }
 

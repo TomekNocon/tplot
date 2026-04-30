@@ -270,6 +270,53 @@ fn render_row(
 ) -> String {
     use std::fmt::Write as _;
 
+    // Track the active ANSI style across cells in the row so we don't emit
+    // a redundant escape for every cell. The body color (focal vs context)
+    // is constant across a row, so we precompute it and compare cell styles
+    // via the Style enum below.
+    let body_color_str: String = if focal {
+        format!(
+            "\x1b[38;2;{};{};{}m",
+            focal_color.r, focal_color.g, focal_color.b
+        )
+    } else {
+        format!(
+            "\x1b[38;2;{};{};{}m",
+            context_color.r, context_color.g, context_color.b
+        )
+    };
+    // Tag each cell's required style by a stable id so we can compare cheaply.
+    #[derive(PartialEq, Eq, Clone, Copy)]
+    enum Style {
+        None,
+        Bold,
+        Body,
+    }
+    let cell_style: Style = if bold { Style::Bold } else { Style::Body };
+    let mut current: Style = Style::None;
+
+    let open = |s: &mut String, want: Style, current: &mut Style| {
+        if *current == want {
+            return;
+        }
+        // Switching styles: reset first (only if something is active).
+        if *current != Style::None {
+            s.push_str("\x1b[0m");
+        }
+        match want {
+            Style::None => {}
+            Style::Bold => s.push_str("\x1b[1m"),
+            Style::Body => s.push_str(&body_color_str),
+        }
+        *current = want;
+    };
+    let close_if_active = |s: &mut String, current: &mut Style| {
+        if *current != Style::None {
+            s.push_str("\x1b[0m");
+            *current = Style::None;
+        }
+    };
+
     let mut s = String::new();
     s.push(v_glyph);
     for (ci, value) in cells.iter().enumerate() {
@@ -304,50 +351,49 @@ fn render_row(
         let used = text_w + bar_w;
         let pad = cell_w.saturating_sub(used);
 
-        // Open ANSI styling.
-        let prefix = if focal {
-            format!(
-                "\x1b[38;2;{};{};{}m",
-                focal_color.r, focal_color.g, focal_color.b
-            )
-        } else if !bold {
-            format!(
-                "\x1b[38;2;{};{};{}m",
-                context_color.r, context_color.g, context_color.b
-            )
-        } else {
-            "\x1b[1m".to_string() // bold for header
-        };
-        let suffix = "\x1b[0m";
-
         if align_right {
+            // Whitespace pad first — close any active style so spaces aren't
+            // styled (cheap reset, then we re-open when needed).
+            close_if_active(&mut s, &mut current);
             for _ in 0..pad {
                 s.push(' ');
             }
-            let _ = write!(s, "{prefix}{text_part}{suffix}");
+            open(&mut s, cell_style, &mut current);
+            let _ = write!(s, "{text_part}");
             if let Some(bar) = &bar_part {
+                close_if_active(&mut s, &mut current);
                 s.push(' ');
-                let _ = write!(s, "{prefix}{bar}{suffix}");
+                open(&mut s, cell_style, &mut current);
+                let _ = write!(s, "{bar}");
             }
         } else if align_center {
+            close_if_active(&mut s, &mut current);
             let lp = pad / 2;
             let rp = pad - lp;
             for _ in 0..lp {
                 s.push(' ');
             }
-            let _ = write!(s, "{prefix}{text_part}{suffix}");
+            open(&mut s, cell_style, &mut current);
+            let _ = write!(s, "{text_part}");
+            close_if_active(&mut s, &mut current);
             for _ in 0..rp {
                 s.push(' ');
             }
         } else {
-            let _ = write!(s, "{prefix}{text_part}{suffix}");
+            open(&mut s, cell_style, &mut current);
+            let _ = write!(s, "{text_part}");
+            close_if_active(&mut s, &mut current);
             for _ in 0..pad {
                 s.push(' ');
             }
         }
+        // Vertical separator: ensure plain output (no styled glyphs).
+        close_if_active(&mut s, &mut current);
         s.push(' ');
         s.push(v_glyph);
     }
+    // End-of-row reset, in case the last cell left styling open.
+    close_if_active(&mut s, &mut current);
     s
 }
 
