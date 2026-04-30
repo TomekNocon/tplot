@@ -34,6 +34,8 @@ pub enum Command {
     Area(AreaArgs),
     /// OHLC candlestick chart. Requires four numeric columns: open, high, low, close.
     Candle(CandleArgs),
+    /// Flat treemap — each row is one leaf rectangle, area proportional to value.
+    Tree(TreeArgs),
     /// Probe the terminal and print a capability report.
     Doctor,
     /// Read a JSON ChartSpec from stdin and render it.
@@ -193,6 +195,20 @@ pub struct AreaArgs {
     /// Required: column whose unique values form the stacked series.
     #[arg(long)]
     pub group: String,
+    #[command(flatten)]
+    pub common: CommonStoryArgs,
+}
+
+#[derive(Args, Debug)]
+pub struct TreeArgs {
+    /// Path to CSV or JSON input. Use `-` for stdin.
+    pub input: String,
+    /// Column with leaf labels (categorical).
+    #[arg(short = 'x')]
+    pub x: String,
+    /// Numeric column whose value drives each leaf's area.
+    #[arg(short = 'y')]
+    pub y: String,
     #[command(flatten)]
     pub common: CommonStoryArgs,
 }
@@ -434,6 +450,19 @@ mod tests {
                 assert_eq!(c.close, "c");
             }
             _ => panic!("expected Candle"),
+        }
+    }
+
+    #[test]
+    fn parses_tree_subcommand() {
+        let args = Cli::parse_from(["tplot", "tree", "data.csv", "-x", "asset", "-y", "weight"]);
+        match args.command {
+            Command::Tree(t) => {
+                assert_eq!(t.input, "data.csv");
+                assert_eq!(t.x, "asset");
+                assert_eq!(t.y, "weight");
+            }
+            _ => panic!("expected Tree"),
         }
     }
 
