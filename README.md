@@ -18,6 +18,35 @@ Storytelling-first chart engine for the terminal — Rust, fast, opinionated by 
 
 ## Install
 
+### One-liner (recommended)
+
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf \
+  https://github.com/TomekNocon/tplot/releases/latest/download/tplot-installer.sh | sh
+```
+
+This grabs the right prebuilt binary for your platform, drops it on your `PATH`, and is what most users want.
+
+### Manual download
+
+Pick the archive matching your platform from the [latest release](https://github.com/TomekNocon/tplot/releases/latest):
+
+| Platform | Archive |
+|---|---|
+| macOS, Apple silicon | `tplot-aarch64-apple-darwin.tar.xz` |
+| macOS, Intel         | `tplot-x86_64-apple-darwin.tar.xz` |
+| Linux, x86_64 (gnu)  | `tplot-x86_64-unknown-linux-gnu.tar.xz` |
+
+```bash
+curl -L https://github.com/TomekNocon/tplot/releases/latest/download/tplot-aarch64-apple-darwin.tar.xz \
+  | tar xJ
+sudo mv tplot /usr/local/bin/
+```
+
+Verify checksums against `SHA256SUMS` published with each release.
+
+### From source
+
 ```bash
 cargo install --path crates/tplot
 ```
