@@ -13,3 +13,5 @@ pub mod braille;
 pub use braille::render_braille;
 
 pub mod probe;
+
+pub mod graphics;
