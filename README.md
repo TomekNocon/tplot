@@ -4,15 +4,15 @@ Storytelling-first chart engine for the terminal — Rust, fast, opinionated by 
 
 > *"Plotly's quality, Cole Knaflic's discipline, in your terminal."*
 
-## What's in this version (Plans 1 + 2 + 3 + 4 + 4.5 + 5 + 5.5 + 6 + 7 + 7b)
+## What's in this version (Plans 1 + 2 + 3 + 4 + 4.5 + 5 + 5.5 + 6 + 7 + 7b + 9)
 
-- Nine chart types: horizontal bar, vertical bar, histogram, line, scatter, sparkline, heatmap, box plot, stacked area.
+- Ten chart types: horizontal bar, vertical bar, histogram, line, scatter, sparkline, heatmap, box plot, stacked area, candlestick.
 - Renderers:
   - half-blocks (truecolor + 256/16/mono fallback) for horizontal bars, heatmaps, box plots, and stacked area
   - vertical-block elements `▁▂▃▄▅▆▇█` for vertical bars, histograms, and sparklines
   - Braille (2×4 dots/cell) for line and scatter
 - Story-pass with chart-specific focal detection (max-value for bars, modal-bin for histograms, largest-delta for lines, point-count for scatter, hottest cell for heatmaps, widest-IQR for box plots, largest-total for stacked area), gray-down palette, and embedded takeaway lines. Trust-score gate refuses to highlight when no series clearly dominates. Sparklines stay deliberately minimal — single colored line, no story overhead.
-- CLI: `tplot bar [--vertical]`, `tplot hist`, `tplot line`, `tplot scatter`, `tplot spark`, `tplot heatmap`, `tplot box`, `tplot area`, `tplot json` (stdin).
+- CLI: `tplot bar [--vertical]`, `tplot hist`, `tplot line`, `tplot scatter`, `tplot spark`, `tplot heatmap`, `tplot box`, `tplot area`, `tplot candle`, `tplot json` (stdin).
 - `tplot doctor` — prints a capability report (color depth, glyph set, theme, graphics-protocol detection). Run it once to see how `tplot` views your terminal.
 - `--graphics auto|kitty|iterm2|none` — emit a real PNG via the Kitty or iTerm2 inline-image protocol. `auto` picks the best protocol detected by probing; `none` (default) keeps the half-blocks/Braille text rendering.
 
@@ -105,6 +105,17 @@ echo "month,rev,region
 ```
 
 The series with the largest total contribution is highlighted; the takeaway names its share of the cumulative total.
+
+```bash
+# OHLC candlestick chart from a stocks-style CSV
+echo "date,o,h,l,c
+d1,100,112,98,110
+d2,110,113,99,105
+d3,105,118,104,115
+d4,115,117,113,115" | tplot candle - -x date --open o --high h --low l --close c
+```
+
+Up days (close ≥ open) render in green; down days in red. The thin vertical wick spans intraday low to high; the filled body covers open to close.
 
 ```bash
 # Inspect what tplot detected about your terminal

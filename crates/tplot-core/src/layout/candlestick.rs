@@ -183,16 +183,14 @@ mod tests {
     #[test]
     fn produces_one_candle_per_row() {
         let layout =
-            layout_candlestick(&ohlc_df(), "date", "open", "high", "low", "close", 80, 16)
-                .unwrap();
+            layout_candlestick(&ohlc_df(), "date", "open", "high", "low", "close", 80, 16).unwrap();
         assert_eq!(layout.candles.len(), 4);
     }
 
     #[test]
     fn up_day_marked_is_up() {
         let layout =
-            layout_candlestick(&ohlc_df(), "date", "open", "high", "low", "close", 80, 16)
-                .unwrap();
+            layout_candlestick(&ohlc_df(), "date", "open", "high", "low", "close", 80, 16).unwrap();
         // Day 1: open=100, close=110 → up
         assert!(layout.candles[0].is_up);
         // Day 2: open=110, close=105 → down
@@ -206,8 +204,7 @@ mod tests {
     #[test]
     fn wick_spans_high_to_low_inverted() {
         let layout =
-            layout_candlestick(&ohlc_df(), "date", "open", "high", "low", "close", 80, 16)
-                .unwrap();
+            layout_candlestick(&ohlc_df(), "date", "open", "high", "low", "close", 80, 16).unwrap();
         let c = &layout.candles[0]; // high=112, low=98
         // Inverted: high → small pixel_y, low → large pixel_y
         assert!(c.wick_top_y < c.wick_bottom_y);
@@ -216,8 +213,7 @@ mod tests {
     #[test]
     fn body_within_wick_range() {
         let layout =
-            layout_candlestick(&ohlc_df(), "date", "open", "high", "low", "close", 80, 16)
-                .unwrap();
+            layout_candlestick(&ohlc_df(), "date", "open", "high", "low", "close", 80, 16).unwrap();
         for c in &layout.candles {
             assert!(
                 c.body_top_y >= c.wick_top_y,
