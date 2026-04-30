@@ -36,6 +36,8 @@ pub enum Command {
     Candle(CandleArgs),
     /// Flat treemap — each row is one leaf rectangle, area proportional to value.
     Tree(TreeArgs),
+    /// Violin plot — KDE-based distribution shape per category.
+    Violin(ViolinArgs),
     /// Probe the terminal and print a capability report.
     Doctor,
     /// Read a JSON ChartSpec from stdin and render it.
@@ -207,6 +209,20 @@ pub struct TreeArgs {
     #[arg(short = 'x')]
     pub x: String,
     /// Numeric column whose value drives each leaf's area.
+    #[arg(short = 'y')]
+    pub y: String,
+    #[command(flatten)]
+    pub common: CommonStoryArgs,
+}
+
+#[derive(Args, Debug)]
+pub struct ViolinArgs {
+    /// Path to CSV or JSON input. Use `-` for stdin.
+    pub input: String,
+    /// Categorical column for grouping (one violin per unique value).
+    #[arg(short = 'x')]
+    pub x: String,
+    /// Numeric column for the value distribution.
     #[arg(short = 'y')]
     pub y: String,
     #[command(flatten)]
@@ -463,6 +479,27 @@ mod tests {
                 assert_eq!(t.y, "weight");
             }
             _ => panic!("expected Tree"),
+        }
+    }
+
+    #[test]
+    fn parses_violin_subcommand() {
+        let args = Cli::parse_from([
+            "tplot",
+            "violin",
+            "data.csv",
+            "-x",
+            "endpoint",
+            "-y",
+            "ms",
+        ]);
+        match args.command {
+            Command::Violin(v) => {
+                assert_eq!(v.input, "data.csv");
+                assert_eq!(v.x, "endpoint");
+                assert_eq!(v.y, "ms");
+            }
+            _ => panic!("expected Violin"),
         }
     }
 
