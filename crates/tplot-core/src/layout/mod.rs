@@ -35,3 +35,6 @@ pub use violin::{Violin, ViolinError, ViolinLayout, layout_violin};
 
 pub mod ridgeline;
 pub use ridgeline::{Ridge, RidgelineError, RidgelineLayout, layout_ridgeline};
+
+pub mod sankey;
+pub use sankey::{SankeyEdgePos, SankeyLayout, SankeyLayoutError, SankeyNodePos, layout_sankey};
