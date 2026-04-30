@@ -310,6 +310,7 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             };
             crate::commands::render_treemap(&parsed.dataframe, &opts)
         }
+        ChartKind::Violin => Err(anyhow!("violin JSON dispatch lands in plan 11 task 7")),
     }
 }
 

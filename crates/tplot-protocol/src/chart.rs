@@ -37,6 +37,8 @@ pub enum ChartKind {
     },
     /// Flat treemap — each row is one leaf rectangle. Value column drives area.
     Treemap,
+    /// Violin plot — KDE-based distribution shape per category.
+    Violin,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -210,6 +212,20 @@ mod tests {
             x: Axis::Column("x".into()),
             y: Axis::Column("y".into()),
             group: Some("cluster".into()),
+            title: None,
+            story: StoryConfig::default(),
+        };
+        let json = serde_json::to_string(&spec).unwrap();
+        assert_eq!(serde_json::from_str::<ChartSpec>(&json).unwrap(), spec);
+    }
+
+    #[test]
+    fn violin_spec_round_trip() {
+        let spec = ChartSpec {
+            kind: ChartKind::Violin,
+            x: Axis::Column("group".into()),
+            y: Axis::Column("value".into()),
+            group: None,
             title: None,
             story: StoryConfig::default(),
         };
