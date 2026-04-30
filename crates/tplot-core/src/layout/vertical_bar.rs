@@ -205,32 +205,32 @@ mod tests {
     #[test]
     fn non_numeric_y_lists_alternatives() {
         let df = DataFrame::from_columns(vec![
-            Column::new(
-                "month",
-                Series::Strings(vec!["Jan".into(), "Feb".into()]),
-            ),
+            Column::new("month", Series::Strings(vec!["Jan".into(), "Feb".into()])),
             Column::new("active", Series::Numbers(vec![10.0, 20.0])),
         ])
         .unwrap();
         let err = layout_vertical_bar(&df, "month", "month", None, 80, 16).unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("must be numeric"));
-        assert!(msg.contains("active"), "error should list numeric alternatives: {msg}");
+        assert!(
+            msg.contains("active"),
+            "error should list numeric alternatives: {msg}"
+        );
     }
 
     #[test]
     fn missing_column_returns_did_you_mean() {
         let df = DataFrame::from_columns(vec![
-            Column::new(
-                "month",
-                Series::Strings(vec!["Jan".into(), "Feb".into()]),
-            ),
+            Column::new("month", Series::Strings(vec!["Jan".into(), "Feb".into()])),
             Column::new("active", Series::Numbers(vec![10.0, 20.0])),
         ])
         .unwrap();
         let err = layout_vertical_bar(&df, "monht", "active", None, 80, 16).unwrap_err();
         let msg = err.to_string();
-        assert!(msg.contains("monht"), "error should name the bad column: {msg}");
+        assert!(
+            msg.contains("monht"),
+            "error should name the bad column: {msg}"
+        );
         assert!(
             msg.contains("month"),
             "error should suggest the closest match: {msg}"

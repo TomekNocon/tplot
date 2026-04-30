@@ -1,0 +1,5 @@
+---
+source: crates/tplot/tests/e2e_errors.rs
+expression: stderr
+---
+Error: terminal too narrow: needs at least 40 cells, got 30. Resize the terminal or pass --width 40 to override.

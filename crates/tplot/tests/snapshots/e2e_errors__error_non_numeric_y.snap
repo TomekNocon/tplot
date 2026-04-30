@@ -1,0 +1,5 @@
+---
+source: crates/tplot/tests/e2e_errors.rs
+expression: stderr
+---
+Error: y column `quarter` must be numeric (numeric columns: `revenue`)

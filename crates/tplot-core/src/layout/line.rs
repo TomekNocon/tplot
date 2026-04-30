@@ -195,16 +195,16 @@ mod tests {
     fn non_numeric_y_lists_alternatives() {
         let df = DataFrame::from_columns(vec![
             Column::new("t", Series::Numbers(vec![1.0, 2.0])),
-            Column::new(
-                "label",
-                Series::Strings(vec!["a".into(), "b".into()]),
-            ),
+            Column::new("label", Series::Strings(vec!["a".into(), "b".into()])),
         ])
         .unwrap();
         let err = layout_line(&df, "t", "label", None, 80, 16).unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("must be numeric"));
-        assert!(msg.contains("`t`"), "error should list numeric alternatives: {msg}");
+        assert!(
+            msg.contains("`t`"),
+            "error should list numeric alternatives: {msg}"
+        );
     }
 
     #[test]
@@ -212,8 +212,14 @@ mod tests {
         let df = ts_df();
         let err = layout_line(&df, "tt", "v", None, 80, 16).unwrap_err();
         let msg = err.to_string();
-        assert!(msg.contains("tt"), "error should name the bad column: {msg}");
-        assert!(msg.contains("`t`"), "error should suggest closest match: {msg}");
+        assert!(
+            msg.contains("tt"),
+            "error should name the bad column: {msg}"
+        );
+        assert!(
+            msg.contains("`t`"),
+            "error should suggest closest match: {msg}"
+        );
     }
 
     #[test]

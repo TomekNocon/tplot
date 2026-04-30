@@ -6,7 +6,9 @@ use tplot_core::layout::layout_stacked_area;
 use tplot_core::rasterize::rasterize_stacked_area;
 use tplot_protocol::{Capabilities, FocusMode, Palette, StoryConfig};
 use tplot_render::render_halfblocks;
-use tplot_story::{focal::SeriesTotal, run_stacked_area_story_pass_with_theme, stacked_area_takeaway};
+use tplot_story::{
+    focal::SeriesTotal, run_stacked_area_story_pass_with_theme, stacked_area_takeaway,
+};
 
 #[derive(Debug, Clone)]
 pub struct AreaOptions {

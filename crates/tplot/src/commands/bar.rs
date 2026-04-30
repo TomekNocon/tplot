@@ -45,7 +45,22 @@ pub fn render_bar(df: &DataFrame, opts: &RenderOptions) -> Result<String> {
         .series()
     {
         Series::Numbers(v) => v.clone(),
-        Series::Strings(_) => return Err(anyhow!("y column `{}` must be numeric", opts.y)),
+        Series::Strings(_) => {
+            let numeric = df.numeric_columns();
+            let listed = if numeric.is_empty() {
+                "(none)".to_string()
+            } else {
+                numeric
+                    .iter()
+                    .map(|n| format!("`{n}`"))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            };
+            return Err(anyhow!(
+                "y column `{}` must be numeric (numeric columns: {listed})",
+                opts.y
+            ));
+        }
     };
 
     let mut series_points: Vec<SeriesPoint> = Vec::new();
@@ -168,7 +183,22 @@ fn render_vertical_bar(df: &DataFrame, opts: &RenderOptions) -> Result<String> {
         .series()
     {
         Series::Numbers(v) => v.clone(),
-        Series::Strings(_) => return Err(anyhow!("y column `{}` must be numeric", opts.y)),
+        Series::Strings(_) => {
+            let numeric = df.numeric_columns();
+            let listed = if numeric.is_empty() {
+                "(none)".to_string()
+            } else {
+                numeric
+                    .iter()
+                    .map(|n| format!("`{n}`"))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            };
+            return Err(anyhow!(
+                "y column `{}` must be numeric (numeric columns: {listed})",
+                opts.y
+            ));
+        }
     };
 
     let mut series_points: Vec<SeriesPoint> = Vec::new();

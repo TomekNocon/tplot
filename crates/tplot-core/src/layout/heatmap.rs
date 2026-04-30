@@ -243,14 +243,17 @@ mod tests {
             layout_heatmap(&df, "hour", "day", "hour", HeatRamp::Inferno, 80, 16).unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("must be numeric"));
-        assert!(msg.contains("count"), "error should list numeric alternatives: {msg}");
+        assert!(
+            msg.contains("count"),
+            "error should list numeric alternatives: {msg}"
+        );
     }
 
     #[test]
     fn missing_column_returns_did_you_mean() {
         let df = small_grid_df();
-        let err = layout_heatmap(&df, "houur", "day", "count", HeatRamp::Inferno, 80, 16)
-            .unwrap_err();
+        let err =
+            layout_heatmap(&df, "houur", "day", "count", HeatRamp::Inferno, 80, 16).unwrap_err();
         let msg = err.to_string();
         assert!(
             msg.contains("houur"),

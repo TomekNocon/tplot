@@ -210,10 +210,7 @@ mod tests {
     #[test]
     fn non_numeric_y_lists_alternatives() {
         let df = DataFrame::from_columns(vec![
-            Column::new(
-                "region",
-                Series::Strings(vec!["NA".into(), "EMEA".into()]),
-            ),
+            Column::new("region", Series::Strings(vec!["NA".into(), "EMEA".into()])),
             Column::new("revenue", Series::Numbers(vec![10.0, 20.0])),
         ])
         .unwrap();
@@ -229,16 +226,16 @@ mod tests {
     #[test]
     fn missing_column_returns_did_you_mean() {
         let df = DataFrame::from_columns(vec![
-            Column::new(
-                "region",
-                Series::Strings(vec!["NA".into(), "EMEA".into()]),
-            ),
+            Column::new("region", Series::Strings(vec!["NA".into(), "EMEA".into()])),
             Column::new("revenue", Series::Numbers(vec![10.0, 20.0])),
         ])
         .unwrap();
         let err = layout_horizontal_bar(&df, "regin", "revenue", None, 80, 12).unwrap_err();
         let msg = err.to_string();
-        assert!(msg.contains("regin"), "error should name the bad column: {msg}");
+        assert!(
+            msg.contains("regin"),
+            "error should name the bad column: {msg}"
+        );
         assert!(
             msg.contains("region"),
             "error should suggest the closest match: {msg}"

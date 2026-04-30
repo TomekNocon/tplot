@@ -212,16 +212,16 @@ mod tests {
         let df = DataFrame::from_columns(vec![
             Column::new("month", Series::Numbers(vec![1.0, 2.0])),
             Column::new("rev", Series::Numbers(vec![10.0, 20.0])),
-            Column::new(
-                "g",
-                Series::Strings(vec!["NA".into(), "EMEA".into()]),
-            ),
+            Column::new("g", Series::Strings(vec!["NA".into(), "EMEA".into()])),
         ])
         .unwrap();
         let err = layout_stacked_area(&df, "month", "g", "g", 80, 16).unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("must be numeric"));
-        assert!(msg.contains("rev"), "error should list numeric alternatives: {msg}");
+        assert!(
+            msg.contains("rev"),
+            "error should list numeric alternatives: {msg}"
+        );
     }
 
     #[test]

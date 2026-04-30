@@ -163,17 +163,17 @@ mod tests {
     #[test]
     fn non_numeric_value_lists_alternatives() {
         let df = DataFrame::from_columns(vec![
-            Column::new(
-                "label",
-                Series::Strings(vec!["A".into(), "B".into()]),
-            ),
+            Column::new("label", Series::Strings(vec!["A".into(), "B".into()])),
             Column::new("count", Series::Numbers(vec![1.0, 2.0])),
         ])
         .unwrap();
         let err = layout_histogram(&df, "label", None, 80, 16).unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("must be numeric"));
-        assert!(msg.contains("count"), "error should list numeric alternatives: {msg}");
+        assert!(
+            msg.contains("count"),
+            "error should list numeric alternatives: {msg}"
+        );
     }
 
     #[test]
@@ -181,7 +181,13 @@ mod tests {
         let df = latency_df();
         let err = layout_histogram(&df, "mz", None, 80, 16).unwrap_err();
         let msg = err.to_string();
-        assert!(msg.contains("mz"), "error should name the bad column: {msg}");
-        assert!(msg.contains("ms"), "error should suggest the closest match: {msg}");
+        assert!(
+            msg.contains("mz"),
+            "error should name the bad column: {msg}"
+        );
+        assert!(
+            msg.contains("ms"),
+            "error should suggest the closest match: {msg}"
+        );
     }
 }

@@ -163,16 +163,16 @@ mod tests {
     fn non_numeric_y_lists_alternatives() {
         let df = DataFrame::from_columns(vec![
             Column::new("x", Series::Numbers(vec![1.0, 2.0])),
-            Column::new(
-                "label",
-                Series::Strings(vec!["a".into(), "b".into()]),
-            ),
+            Column::new("label", Series::Strings(vec!["a".into(), "b".into()])),
         ])
         .unwrap();
         let err = layout_scatter(&df, "x", "label", None, 80, 16).unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("must be numeric"));
-        assert!(msg.contains("`x`"), "error should list numeric alternatives: {msg}");
+        assert!(
+            msg.contains("`x`"),
+            "error should list numeric alternatives: {msg}"
+        );
     }
 
     #[test]
@@ -180,7 +180,13 @@ mod tests {
         let df = pts_df();
         let err = layout_scatter(&df, "xx", "y", None, 80, 16).unwrap_err();
         let msg = err.to_string();
-        assert!(msg.contains("xx"), "error should name the bad column: {msg}");
-        assert!(msg.contains("`x`"), "error should suggest closest match: {msg}");
+        assert!(
+            msg.contains("xx"),
+            "error should name the bad column: {msg}"
+        );
+        assert!(
+            msg.contains("`x`"),
+            "error should suggest closest match: {msg}"
+        );
     }
 }

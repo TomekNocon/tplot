@@ -51,7 +51,8 @@ pub fn render_histogram(df: &DataFrame, opts: &HistogramOptions) -> Result<Strin
         annotation: opts.annotate.clone(),
     };
     let caps = Capabilities::from_vars(|name| std::env::var(name).ok());
-    let story = run_histogram_story_pass_with_theme(&bins_as_points, &story_cfg, palette, caps.theme);
+    let story =
+        run_histogram_story_pass_with_theme(&bins_as_points, &story_cfg, palette, caps.theme);
 
     // Rasterize.
     let mut buf = PixelBuffer::new(

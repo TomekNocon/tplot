@@ -235,7 +235,10 @@ mod tests {
         let err = layout_boxplot(&df, "endpoint", "endpoint", 80, 16).unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("must be numeric"));
-        assert!(msg.contains("ms"), "error should list numeric alternatives: {msg}");
+        assert!(
+            msg.contains("ms"),
+            "error should list numeric alternatives: {msg}"
+        );
     }
 
     #[test]
