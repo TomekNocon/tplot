@@ -37,6 +37,9 @@ pub use ridgeline::{RidgeOptions, render_ridgeline};
 pub mod sankey;
 pub use sankey::{SankeyOptions, render_sankey};
 
+pub mod table;
+pub use table::{TableOptions, render_table};
+
 pub mod json;
 pub use json::render_from_json;
 
