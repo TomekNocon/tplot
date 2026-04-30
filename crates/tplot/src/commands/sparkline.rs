@@ -30,10 +30,23 @@ pub fn parse_input_numbers(s: &str, y_col: Option<&str>) -> Result<Vec<f64>> {
     }
 
     if looks_like_csv(s) {
-        let col = y_col.ok_or_else(|| {
-            anyhow!("input looks like CSV — pass `-y <column>` to pick the numeric column")
-        })?;
         let df = parse_csv_str(s).map_err(|e| anyhow!(e.to_string()))?;
+        let col = y_col.ok_or_else(|| {
+            let numeric = df.numeric_columns();
+            let listed = if numeric.is_empty() {
+                "(none — all columns are strings)".to_string()
+            } else {
+                numeric
+                    .iter()
+                    .map(|n| format!("`{n}`"))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            };
+            anyhow!(
+                "input looks like CSV — pass `-y <column>` to pick the numeric column. \
+                 Available numeric columns: {listed}"
+            )
+        })?;
         let series = df.column(col).map_err(|e| anyhow!(e.to_string()))?.series();
         match series {
             Series::Numbers(v) => Ok(v.clone()),
@@ -160,6 +173,15 @@ mod tests {
     fn rejects_csv_without_y_column() {
         let csv = "t,latency\n1,42\n2,58\n";
         assert!(parse_input_numbers(csv, None).is_err());
+    }
+
+    #[test]
+    fn csv_without_y_lists_available_numeric_columns() {
+        let csv = "name,score,age\nalice,98,30\nbob,72,25\n";
+        let err = parse_input_numbers(csv, None).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("score"), "missing `score` in error: {msg}");
+        assert!(msg.contains("age"), "missing `age` in error: {msg}");
     }
 
     #[test]
