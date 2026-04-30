@@ -337,6 +337,7 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             };
             crate::commands::render_violin(&parsed.dataframe, &opts)
         }
+        ChartKind::Ridgeline => Err(anyhow!("ridgeline JSON dispatch lands in plan 11.5 task 6")),
     }
 }
 

@@ -39,6 +39,9 @@ pub enum ChartKind {
     Treemap,
     /// Violin plot — KDE-based distribution shape per category.
     Violin,
+    /// Ridgeline (joy-plot) chart — stacked KDEs per group along a categorical
+    /// y-axis, each ridge a filled curve over a shared x-axis.
+    Ridgeline,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -226,6 +229,20 @@ mod tests {
             x: Axis::Column("group".into()),
             y: Axis::Column("value".into()),
             group: None,
+            title: None,
+            story: StoryConfig::default(),
+        };
+        let json = serde_json::to_string(&spec).unwrap();
+        assert_eq!(serde_json::from_str::<ChartSpec>(&json).unwrap(), spec);
+    }
+
+    #[test]
+    fn ridgeline_spec_round_trip() {
+        let spec = ChartSpec {
+            kind: ChartKind::Ridgeline,
+            x: Axis::Column("value".into()),
+            y: Axis::Column("__count__".into()),
+            group: Some("category".into()),
             title: None,
             story: StoryConfig::default(),
         };
