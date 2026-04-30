@@ -31,6 +31,9 @@ pub use treemap::{TreeOptions, render_treemap};
 pub mod violin;
 pub use violin::{ViolinOptions, render_violin};
 
+pub mod ridgeline;
+pub use ridgeline::{RidgeOptions, render_ridgeline};
+
 pub mod json;
 pub use json::render_from_json;
 
