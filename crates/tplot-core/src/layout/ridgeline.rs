@@ -148,11 +148,7 @@ pub fn layout_ridgeline(
         .enumerate()
         .map(|(i, (label, summary, vs))| {
             let densities = kde_evaluate(&vs, &grid);
-            let local_max = densities
-                .iter()
-                .copied()
-                .fold(0.0_f64, f64::max)
-                .max(1e-12);
+            let local_max = densities.iter().copied().fold(0.0_f64, f64::max).max(1e-12);
 
             // Heights (pixels) per column, normalized to this ridge's own peak.
             let heights: Vec<usize> = densities
@@ -240,7 +236,12 @@ mod tests {
         let layout = layout_ridgeline(&months_df(), "ms", "month", 80, 16).unwrap();
         let pw = layout.plot_box.pixel_width;
         for r in &layout.ridges {
-            assert_eq!(r.heights.len(), pw, "ridge `{}` has wrong height count", r.label);
+            assert_eq!(
+                r.heights.len(),
+                pw,
+                "ridge `{}` has wrong height count",
+                r.label
+            );
         }
     }
 

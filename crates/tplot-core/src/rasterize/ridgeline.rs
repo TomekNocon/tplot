@@ -32,7 +32,11 @@ pub fn rasterize_ridgeline(
     }
 }
 
-fn paint_ridge(r: &crate::layout::Ridge, palette: &HashMap<String, RgbColor>, buf: &mut PixelBuffer) {
+fn paint_ridge(
+    r: &crate::layout::Ridge,
+    palette: &HashMap<String, RgbColor>,
+    buf: &mut PixelBuffer,
+) {
     let color = palette.get(&r.series_key).copied().unwrap_or(RgbColor {
         r: 0x76,
         g: 0x76,
@@ -76,8 +80,8 @@ mod tests {
         let triangle = |center: usize, n: usize, peak: usize| -> Vec<usize> {
             (0..n)
                 .map(|i| {
-                    let dist = if i > center { i - center } else { center - i };
-                    if dist >= peak { 0 } else { peak - dist }
+                    let dist = i.abs_diff(center);
+                    peak.saturating_sub(dist)
                 })
                 .collect()
         };

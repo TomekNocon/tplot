@@ -513,9 +513,7 @@ mod tests {
 
     #[test]
     fn parses_ridge_subcommand() {
-        let args = Cli::parse_from([
-            "tplot", "ridge", "data.csv", "-x", "ms", "--group", "month",
-        ]);
+        let args = Cli::parse_from(["tplot", "ridge", "data.csv", "-x", "ms", "--group", "month"]);
         match args.command {
             Command::Ridge(r) => {
                 assert_eq!(r.input, "data.csv");

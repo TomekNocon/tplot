@@ -54,7 +54,12 @@ pub fn render_ridgeline(df: &DataFrame, opts: &RidgeOptions) -> Result<String> {
 
     // Rasterize.
     let mut buf = PixelBuffer::new(layout.plot_box.pixel_width, layout.plot_box.pixel_height);
-    rasterize_ridgeline(&layout, story.focal.as_deref(), &story.palette_map, &mut buf);
+    rasterize_ridgeline(
+        &layout,
+        story.focal.as_deref(),
+        &story.palette_map,
+        &mut buf,
+    );
 
     // Graphics path.
     let protocol = resolve_graphics(&opts.graphics, caps);
