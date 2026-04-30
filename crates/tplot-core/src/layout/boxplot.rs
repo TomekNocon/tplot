@@ -40,6 +40,8 @@ pub enum BoxPlotError {
     NonNumericY(String),
     #[error("no data rows")]
     Empty,
+    #[error(transparent)]
+    DataFrame(#[from] crate::dataframe::DataFrameError),
 }
 
 const SUB_X_PER_CELL: usize = 1; // half-blocks: 1 sub-pixel column per cell
@@ -53,11 +55,11 @@ pub fn layout_boxplot(
     canvas_cells_w: usize,
     canvas_cells_h: usize,
 ) -> Result<BoxPlotLayout, BoxPlotError> {
-    let labels: Vec<String> = match df.column(x_col).map_err(|_| BoxPlotError::Empty)?.series() {
+    let labels: Vec<String> = match df.column(x_col)?.series() {
         Series::Strings(v) => v.clone(),
         Series::Numbers(v) => v.iter().map(|n| format!("{n}")).collect(),
     };
-    let values: Vec<f64> = match df.column(y_col).map_err(|_| BoxPlotError::Empty)?.series() {
+    let values: Vec<f64> = match df.column(y_col)?.series() {
         Series::Numbers(v) => v.clone(),
         Series::Strings(_) => return Err(BoxPlotError::NonNumericY(y_col.to_string())),
     };
@@ -219,6 +221,21 @@ mod tests {
             "/orders IQR ({}) should dominate /users IQR ({})",
             orders.summary.iqr(),
             users.summary.iqr()
+        );
+    }
+
+    #[test]
+    fn missing_column_returns_did_you_mean() {
+        let df = endpoints_df();
+        let err = layout_boxplot(&df, "endpont", "ms", 80, 16).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("endpont"),
+            "error should name the bad column: {msg}"
+        );
+        assert!(
+            msg.contains("endpoint"),
+            "error should suggest the closest match: {msg}"
         );
     }
 

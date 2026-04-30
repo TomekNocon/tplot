@@ -32,6 +32,8 @@ pub enum LineLayoutError {
     NonNumericY(String),
     #[error("no data rows")]
     Empty,
+    #[error(transparent)]
+    DataFrame(#[from] crate::dataframe::DataFrameError),
 }
 
 const SUB_X: usize = 2; // Braille: 2 sub-pixel cols per cell
@@ -46,19 +48,11 @@ pub fn layout_line(
     canvas_cells_w: usize,
     canvas_cells_h: usize,
 ) -> Result<LineLayout, LineLayoutError> {
-    let xs: Vec<f64> = match df
-        .column(x_col)
-        .map_err(|_| LineLayoutError::Empty)?
-        .series()
-    {
+    let xs: Vec<f64> = match df.column(x_col)?.series() {
         Series::Numbers(v) => v.clone(),
         Series::Strings(_) => return Err(LineLayoutError::NonNumericX(x_col.to_string())),
     };
-    let ys: Vec<f64> = match df
-        .column(y_col)
-        .map_err(|_| LineLayoutError::Empty)?
-        .series()
-    {
+    let ys: Vec<f64> = match df.column(y_col)?.series() {
         Series::Numbers(v) => v.clone(),
         Series::Strings(_) => return Err(LineLayoutError::NonNumericY(y_col.to_string())),
     };
@@ -68,7 +62,7 @@ pub fn layout_line(
 
     // Optional grouping: split rows into series.
     let groups: Vec<String> = if let Some(g) = group_col {
-        match df.column(g).map_err(|_| LineLayoutError::Empty)?.series() {
+        match df.column(g)?.series() {
             Series::Strings(v) => v.clone(),
             Series::Numbers(v) => v.iter().map(|n| format!("{n}")).collect(),
         }
@@ -185,6 +179,15 @@ mod tests {
         let last_x = pts[pts.len() - 1].0;
         assert!(first_x < 4);
         assert!(last_x > layout.plot_box.pixel_width - 8);
+    }
+
+    #[test]
+    fn missing_column_returns_did_you_mean() {
+        let df = ts_df();
+        let err = layout_line(&df, "tt", "v", None, 80, 16).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("tt"), "error should name the bad column: {msg}");
+        assert!(msg.contains("`t`"), "error should suggest closest match: {msg}");
     }
 
     #[test]

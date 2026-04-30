@@ -29,6 +29,8 @@ pub enum ScatterLayoutError {
     NonNumericY(String),
     #[error("no data rows")]
     Empty,
+    #[error(transparent)]
+    DataFrame(#[from] crate::dataframe::DataFrameError),
 }
 
 const SUB_X: usize = 2;
@@ -43,19 +45,11 @@ pub fn layout_scatter(
     canvas_cells_w: usize,
     canvas_cells_h: usize,
 ) -> Result<ScatterLayout, ScatterLayoutError> {
-    let xs: Vec<f64> = match df
-        .column(x_col)
-        .map_err(|_| ScatterLayoutError::Empty)?
-        .series()
-    {
+    let xs: Vec<f64> = match df.column(x_col)?.series() {
         Series::Numbers(v) => v.clone(),
         Series::Strings(_) => return Err(ScatterLayoutError::NonNumericX(x_col.to_string())),
     };
-    let ys: Vec<f64> = match df
-        .column(y_col)
-        .map_err(|_| ScatterLayoutError::Empty)?
-        .series()
-    {
+    let ys: Vec<f64> = match df.column(y_col)?.series() {
         Series::Numbers(v) => v.clone(),
         Series::Strings(_) => return Err(ScatterLayoutError::NonNumericY(y_col.to_string())),
     };
@@ -64,11 +58,7 @@ pub fn layout_scatter(
     }
 
     let groups: Vec<String> = if let Some(g) = group_col {
-        match df
-            .column(g)
-            .map_err(|_| ScatterLayoutError::Empty)?
-            .series()
-        {
+        match df.column(g)?.series() {
             Series::Strings(v) => v.clone(),
             Series::Numbers(v) => v.iter().map(|n| format!("{n}")).collect(),
         }
@@ -157,5 +147,14 @@ mod tests {
     fn groups_split_into_separate_series() {
         let layout = layout_scatter(&pts_df(), "x", "y", Some("g"), 80, 16).unwrap();
         assert_eq!(layout.series.len(), 2);
+    }
+
+    #[test]
+    fn missing_column_returns_did_you_mean() {
+        let df = pts_df();
+        let err = layout_scatter(&df, "xx", "y", None, 80, 16).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("xx"), "error should name the bad column: {msg}");
+        assert!(msg.contains("`x`"), "error should suggest closest match: {msg}");
     }
 }

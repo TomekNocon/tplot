@@ -18,6 +18,8 @@ pub enum HistogramError {
     Empty,
     #[error(transparent)]
     Layout(#[from] VerticalBarLayoutError),
+    #[error(transparent)]
+    DataFrame(#[from] crate::dataframe::DataFrameError),
 }
 
 pub fn layout_histogram(
@@ -27,11 +29,7 @@ pub fn layout_histogram(
     canvas_cells_w: usize,
     canvas_cells_h: usize,
 ) -> Result<HistogramLayout, HistogramError> {
-    let values: Vec<f64> = match df
-        .column(value_col)
-        .map_err(|_| HistogramError::Empty)?
-        .series()
-    {
+    let values: Vec<f64> = match df.column(value_col)?.series() {
         Series::Numbers(v) => v.clone(),
         Series::Strings(_) => return Err(HistogramError::NonNumeric(value_col.to_string())),
     };
@@ -70,8 +68,7 @@ pub fn layout_histogram(
     let bar_df = DataFrame::from_columns(vec![
         Column::new("__bin__", Series::Strings(labels)),
         Column::new("__count__", Series::Numbers(count_floats)),
-    ])
-    .map_err(|_| HistogramError::Empty)?;
+    ])?;
 
     let bars = layout_vertical_bar(
         &bar_df,
@@ -156,5 +153,14 @@ mod tests {
                 bar.label
             );
         }
+    }
+
+    #[test]
+    fn missing_column_returns_did_you_mean() {
+        let df = latency_df();
+        let err = layout_histogram(&df, "mz", None, 80, 16).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("mz"), "error should name the bad column: {msg}");
+        assert!(msg.contains("ms"), "error should suggest the closest match: {msg}");
     }
 }

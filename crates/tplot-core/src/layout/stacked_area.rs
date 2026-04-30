@@ -37,6 +37,8 @@ pub enum StackedAreaError {
     NonNumericY(String),
     #[error("no data rows")]
     Empty,
+    #[error(transparent)]
+    DataFrame(#[from] crate::dataframe::DataFrameError),
 }
 
 const SUB_X_PER_CELL: usize = 1;
@@ -51,27 +53,15 @@ pub fn layout_stacked_area(
     canvas_cells_w: usize,
     canvas_cells_h: usize,
 ) -> Result<StackedAreaLayout, StackedAreaError> {
-    let xs: Vec<f64> = match df
-        .column(x_col)
-        .map_err(|_| StackedAreaError::Empty)?
-        .series()
-    {
+    let xs: Vec<f64> = match df.column(x_col)?.series() {
         Series::Numbers(v) => v.clone(),
         Series::Strings(_) => return Err(StackedAreaError::NonNumericX(x_col.to_string())),
     };
-    let ys: Vec<f64> = match df
-        .column(y_col)
-        .map_err(|_| StackedAreaError::Empty)?
-        .series()
-    {
+    let ys: Vec<f64> = match df.column(y_col)?.series() {
         Series::Numbers(v) => v.clone(),
         Series::Strings(_) => return Err(StackedAreaError::NonNumericY(y_col.to_string())),
     };
-    let groups: Vec<String> = match df
-        .column(group_col)
-        .map_err(|_| StackedAreaError::Empty)?
-        .series()
-    {
+    let groups: Vec<String> = match df.column(group_col)?.series() {
         Series::Strings(v) => v.clone(),
         Series::Numbers(v) => v.iter().map(|n| format!("{n}")).collect(),
     };
@@ -205,5 +195,20 @@ mod tests {
         let emea = layout.series.iter().find(|s| s.key == "EMEA").unwrap();
         assert!((na.total - 70.0).abs() < 1e-6);
         assert!((emea.total - 16.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn missing_column_returns_did_you_mean() {
+        let df = revenue_df();
+        let err = layout_stacked_area(&df, "monthh", "rev", "g", 80, 16).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("monthh"),
+            "error should name the bad column: {msg}"
+        );
+        assert!(
+            msg.contains("month"),
+            "error should suggest the closest match: {msg}"
+        );
     }
 }

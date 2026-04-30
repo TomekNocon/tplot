@@ -43,6 +43,8 @@ pub enum LayoutError {
     NonNumericY(String),
     #[error("no data rows")]
     Empty,
+    #[error(transparent)]
+    DataFrame(#[from] crate::dataframe::DataFrameError),
 }
 
 const SUB_PIXELS_PER_CELL_X: usize = 1; // half-blocks: 1 sub-pixel column per cell
@@ -56,11 +58,11 @@ pub fn layout_horizontal_bar(
     canvas_cells_w: usize,
     canvas_cells_h: usize,
 ) -> Result<BarLayout, LayoutError> {
-    let labels: Vec<String> = match df.column(x_col).map_err(|_| LayoutError::Empty)?.series() {
+    let labels: Vec<String> = match df.column(x_col)?.series() {
         Series::Strings(v) => v.clone(),
         Series::Numbers(v) => v.iter().map(|n| format!("{n}")).collect(),
     };
-    let values: Vec<f64> = match df.column(y_col).map_err(|_| LayoutError::Empty)?.series() {
+    let values: Vec<f64> = match df.column(y_col)?.series() {
         Series::Numbers(v) => v.clone(),
         Series::Strings(_) => return Err(LayoutError::NonNumericY(y_col.to_string())),
     };
@@ -198,5 +200,24 @@ mod tests {
         let layout = layout_horizontal_bar(&small_df(), "region", "revenue", None, 80, 12).unwrap();
         // "LATAM" is 5 chars + 2 cells of padding.
         assert_eq!(layout.label_margin, 7);
+    }
+
+    #[test]
+    fn missing_column_returns_did_you_mean() {
+        let df = DataFrame::from_columns(vec![
+            Column::new(
+                "region",
+                Series::Strings(vec!["NA".into(), "EMEA".into()]),
+            ),
+            Column::new("revenue", Series::Numbers(vec![10.0, 20.0])),
+        ])
+        .unwrap();
+        let err = layout_horizontal_bar(&df, "regin", "revenue", None, 80, 12).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("regin"), "error should name the bad column: {msg}");
+        assert!(
+            msg.contains("region"),
+            "error should suggest the closest match: {msg}"
+        );
     }
 }

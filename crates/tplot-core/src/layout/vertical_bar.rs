@@ -41,6 +41,8 @@ pub enum VerticalBarLayoutError {
         needed: usize,
         have: usize,
     },
+    #[error(transparent)]
+    DataFrame(#[from] crate::dataframe::DataFrameError),
 }
 
 const SUB_PIXELS_PER_CELL_Y: usize = 8;
@@ -54,19 +56,11 @@ pub fn layout_vertical_bar(
     canvas_cells_w: usize,
     canvas_cells_h: usize,
 ) -> Result<VerticalBarLayout, VerticalBarLayoutError> {
-    let labels: Vec<String> = match df
-        .column(x_col)
-        .map_err(|_| VerticalBarLayoutError::Empty)?
-        .series()
-    {
+    let labels: Vec<String> = match df.column(x_col)?.series() {
         Series::Strings(v) => v.clone(),
         Series::Numbers(v) => v.iter().map(|n| format!("{n}")).collect(),
     };
-    let values: Vec<f64> = match df
-        .column(y_col)
-        .map_err(|_| VerticalBarLayoutError::Empty)?
-        .series()
-    {
+    let values: Vec<f64> = match df.column(y_col)?.series() {
         Series::Numbers(v) => v.clone(),
         Series::Strings(_) => return Err(VerticalBarLayoutError::NonNumericY(y_col.to_string())),
     };
@@ -201,5 +195,24 @@ mod tests {
         for bar in &layout.bars {
             assert!(bar.pixel_width >= 1, "bar {:?} too narrow", bar.label);
         }
+    }
+
+    #[test]
+    fn missing_column_returns_did_you_mean() {
+        let df = DataFrame::from_columns(vec![
+            Column::new(
+                "month",
+                Series::Strings(vec!["Jan".into(), "Feb".into()]),
+            ),
+            Column::new("active", Series::Numbers(vec![10.0, 20.0])),
+        ])
+        .unwrap();
+        let err = layout_vertical_bar(&df, "monht", "active", None, 80, 16).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("monht"), "error should name the bad column: {msg}");
+        assert!(
+            msg.contains("month"),
+            "error should suggest the closest match: {msg}"
+        );
     }
 }

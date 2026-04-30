@@ -29,6 +29,8 @@ pub enum HeatmapError {
     NonNumericValue(String),
     #[error("no data rows")]
     Empty,
+    #[error(transparent)]
+    DataFrame(#[from] crate::dataframe::DataFrameError),
 }
 
 const SUB_Y_PER_CELL_ROW: usize = 2; // half-blocks: 2 sub-pixel rows per cell
@@ -42,19 +44,15 @@ pub fn layout_heatmap(
     canvas_cells_w: usize,
     canvas_cells_h: usize,
 ) -> Result<HeatmapLayout, HeatmapError> {
-    let xs: Vec<String> = match df.column(x_col).map_err(|_| HeatmapError::Empty)?.series() {
+    let xs: Vec<String> = match df.column(x_col)?.series() {
         Series::Strings(v) => v.clone(),
         Series::Numbers(v) => v.iter().map(|n| format!("{n}")).collect(),
     };
-    let ys: Vec<String> = match df.column(y_col).map_err(|_| HeatmapError::Empty)?.series() {
+    let ys: Vec<String> = match df.column(y_col)?.series() {
         Series::Strings(v) => v.clone(),
         Series::Numbers(v) => v.iter().map(|n| format!("{n}")).collect(),
     };
-    let vs: Vec<f64> = match df
-        .column(value_col)
-        .map_err(|_| HeatmapError::Empty)?
-        .series()
-    {
+    let vs: Vec<f64> = match df.column(value_col)?.series() {
         Series::Numbers(v) => v.clone(),
         Series::Strings(_) => return Err(HeatmapError::NonNumericValue(value_col.to_string())),
     };
@@ -231,6 +229,22 @@ mod tests {
         let max_color = layout.cell_colors[max_iy][max_ix].unwrap();
         // Inferno end is red-ish.
         assert!(max_color.r > 150);
+    }
+
+    #[test]
+    fn missing_column_returns_did_you_mean() {
+        let df = small_grid_df();
+        let err = layout_heatmap(&df, "houur", "day", "count", HeatRamp::Inferno, 80, 16)
+            .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("houur"),
+            "error should name the bad column: {msg}"
+        );
+        assert!(
+            msg.contains("hour"),
+            "error should suggest the closest match: {msg}"
+        );
     }
 
     #[test]
