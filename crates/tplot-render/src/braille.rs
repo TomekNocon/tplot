@@ -37,6 +37,10 @@ pub fn render_braille(buf: &PixelBuffer, caps: Capabilities) -> String {
     let mut out = String::with_capacity(cells_w * cells_h * 12);
 
     for cy in 0..cells_h {
+        // Track active fg color across cells in this row; emit only on change
+        // and reset once at end of line.
+        let mut last_fg: Option<RgbColor> = None;
+
         for cx in 0..cells_w {
             let mut bits: u8 = 0;
             // Per-channel accumulators for picking the dominant cell color
@@ -64,6 +68,10 @@ pub fn render_braille(buf: &PixelBuffer, caps: Capabilities) -> String {
             }
 
             if bits == 0 {
+                if last_fg.is_some() {
+                    out.push_str(reset());
+                    last_fg = None;
+                }
                 out.push(' ');
             } else {
                 let color = counts
@@ -73,8 +81,16 @@ pub fn render_braille(buf: &PixelBuffer, caps: Capabilities) -> String {
                     .or(last)
                     .unwrap();
                 let glyph = char::from_u32(0x2800 + bits as u32).unwrap_or(' ');
-                let _ = write!(out, "{}{}{}", fg(color, caps.color_depth), glyph, reset());
+                if last_fg != Some(color) {
+                    let _ = write!(out, "{}", fg(color, caps.color_depth));
+                    last_fg = Some(color);
+                }
+                out.push(glyph);
             }
+        }
+
+        if last_fg.is_some() {
+            out.push_str(reset());
         }
         out.push('\n');
     }
