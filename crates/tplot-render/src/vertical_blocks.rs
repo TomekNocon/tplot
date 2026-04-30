@@ -31,6 +31,10 @@ pub fn render_vertical_blocks(buf: &PixelBuffer, caps: Capabilities) -> String {
     for cy in 0..cells_h {
         // Cells are walked top-down (cy=0 is the topmost row of the chart).
         let py_top = cy * SUB_PIXELS_PER_CELL;
+        // Track active fg color across cells in this row; emit only on change
+        // and reset once at end of line.
+        let mut last_fg: Option<RgbColor> = None;
+
         for cx in 0..cells_w {
             // Determine the dominant color in this cell (first non-empty pixel
             // wins — for solid bars they're all the same color, anyway).
@@ -48,17 +52,24 @@ pub fn render_vertical_blocks(buf: &PixelBuffer, caps: Capabilities) -> String {
             }
 
             if filled == 0 || color.is_none() {
+                if last_fg.is_some() {
+                    out.push_str(reset());
+                    last_fg = None;
+                }
                 out.push(' ');
             } else {
                 let glyph = GLYPHS[filled.min(8)];
-                let _ = write!(
-                    out,
-                    "{}{}{}",
-                    fg(color.unwrap(), caps.color_depth),
-                    glyph,
-                    reset()
-                );
+                let c = color.unwrap();
+                if last_fg != Some(c) {
+                    let _ = write!(out, "{}", fg(c, caps.color_depth));
+                    last_fg = Some(c);
+                }
+                out.push(glyph);
             }
+        }
+
+        if last_fg.is_some() {
+            out.push_str(reset());
         }
         out.push('\n');
     }
