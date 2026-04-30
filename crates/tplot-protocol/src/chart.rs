@@ -28,6 +28,13 @@ pub enum ChartKind {
     /// stacks on top of the previous (in first-seen order). Y is the cumulative
     /// total across all groups.
     StackedArea,
+    /// OHLC candlestick chart. Names of the numeric columns for each value.
+    Candlestick {
+        open: String,
+        high: String,
+        low: String,
+        close: String,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -168,6 +175,25 @@ mod tests {
             x: Axis::Column("month".into()),
             y: Axis::Column("revenue".into()),
             group: Some("region".into()),
+            title: None,
+            story: StoryConfig::default(),
+        };
+        let json = serde_json::to_string(&spec).unwrap();
+        assert_eq!(serde_json::from_str::<ChartSpec>(&json).unwrap(), spec);
+    }
+
+    #[test]
+    fn candlestick_spec_round_trip() {
+        let spec = ChartSpec {
+            kind: ChartKind::Candlestick {
+                open: "open".into(),
+                high: "high".into(),
+                low: "low".into(),
+                close: "close".into(),
+            },
+            x: Axis::Column("date".into()),
+            y: Axis::Column("close".into()),
+            group: None,
             title: None,
             story: StoryConfig::default(),
         };

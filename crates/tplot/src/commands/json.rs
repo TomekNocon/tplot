@@ -262,6 +262,9 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             };
             render_stacked_area(&parsed.dataframe, &opts)
         }
+        ChartKind::Candlestick { .. } => {
+            Err(anyhow!("candlestick JSON dispatch lands in plan 9 task 6"))
+        }
     }
 }
 
