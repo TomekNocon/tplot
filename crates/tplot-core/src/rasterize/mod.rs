@@ -27,3 +27,6 @@ pub use treemap::rasterize_treemap;
 
 pub mod violin;
 pub use violin::rasterize_violin;
+
+pub mod ridgeline;
+pub use ridgeline::rasterize_ridgeline;
