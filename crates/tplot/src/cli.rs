@@ -192,6 +192,10 @@ pub struct CommonStoryArgs {
     /// Color palette: signature | editorial | colorblind-safe.
     #[arg(long, default_value = "signature")]
     pub palette: String,
+    /// Render the chart via a terminal graphics protocol when supported.
+    /// One of: `auto` (pick the best detected), `kitty`, `iterm2`, `none`.
+    #[arg(long, default_value = "none")]
+    pub graphics: String,
 }
 
 #[cfg(test)]
@@ -382,6 +386,36 @@ mod tests {
     fn parses_doctor_subcommand() {
         let args = Cli::parse_from(["tplot", "doctor"]);
         assert!(matches!(args.command, Command::Doctor));
+    }
+
+    #[test]
+    fn parses_graphics_flag() {
+        let args = Cli::parse_from([
+            "tplot",
+            "bar",
+            "sales.csv",
+            "-x",
+            "quarter",
+            "-y",
+            "revenue",
+            "--graphics",
+            "kitty",
+        ]);
+        match args.command {
+            Command::Bar(b) => assert_eq!(b.common.graphics, "kitty"),
+            _ => panic!(),
+        }
+    }
+
+    #[test]
+    fn graphics_flag_defaults_to_none() {
+        let args = Cli::parse_from([
+            "tplot", "bar", "sales.csv", "-x", "quarter", "-y", "revenue",
+        ]);
+        match args.command {
+            Command::Bar(b) => assert_eq!(b.common.graphics, "none"),
+            _ => panic!(),
+        }
     }
 
     #[test]
