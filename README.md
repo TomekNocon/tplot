@@ -6,13 +6,13 @@ Storytelling-first chart engine for the terminal — Rust, fast, opinionated by 
 
 ## What's in this version (Plans 1 + 2 + 3 + 4 + 4.5 + 5 + 5.5 + 6 + 7 + 7b + 9 + 10)
 
-- Fourteen chart types: horizontal bar, vertical bar, histogram, line, scatter, sparkline, heatmap, box plot, stacked area, candlestick, treemap, violin, ridgeline, sankey.
+- Fifteen chart types: horizontal bar, vertical bar, histogram, line, scatter, sparkline, heatmap, box plot, stacked area, candlestick, treemap, violin, ridgeline, sankey, table.
 - Renderers:
   - half-blocks (truecolor + 256/16/mono fallback) for horizontal bars, heatmaps, box plots, and stacked area
   - vertical-block elements `▁▂▃▄▅▆▇█` for vertical bars, histograms, and sparklines
   - Braille (2×4 dots/cell) for line and scatter
 - Story-pass with chart-specific focal detection (max-value for bars, modal-bin for histograms, largest-delta for lines, point-count for scatter, hottest cell for heatmaps, widest-IQR for box plots, largest-total for stacked area), gray-down palette, and embedded takeaway lines. Trust-score gate refuses to highlight when no series clearly dominates. Sparklines stay deliberately minimal — single colored line, no story overhead.
-- CLI: `tplot bar [--vertical]`, `tplot hist`, `tplot line`, `tplot scatter`, `tplot spark`, `tplot heatmap`, `tplot box`, `tplot area`, `tplot candle`, `tplot tree`, `tplot violin`, `tplot ridge`, `tplot sankey`, `tplot json` (stdin).
+- CLI: `tplot bar [--vertical]`, `tplot hist`, `tplot line`, `tplot scatter`, `tplot spark`, `tplot heatmap`, `tplot box`, `tplot area`, `tplot candle`, `tplot tree`, `tplot violin`, `tplot ridge`, `tplot sankey`, `tplot table`, `tplot json` (stdin).
 - `tplot doctor` — prints a capability report (color depth, glyph set, theme, graphics-protocol detection). Run it once to see how `tplot` views your terminal.
 - `--graphics auto|kitty|iterm2|none` — emit a real PNG via the Kitty or iTerm2 inline-image protocol. `auto` picks the best protocol detected by probing; `none` (default) keeps the half-blocks/Braille text rendering.
 
@@ -170,6 +170,16 @@ signup,abandoned,1000" | tplot sankey - --source src --target tgt --value flow
 ```
 
 Nodes are placed in vertical layer columns (assigned via Kahn's topological sort), edges drawn as smoothstep-curved bands with width proportional to flow value. The largest single edge is highlighted in burnt orange; the rest are grayed-down. Errors out cleanly if the input forms a cycle (sankey requires a DAG).
+
+```bash
+# Pretty-printed table with inline value bars and focal-row highlighting
+tplot table sales.csv --bars revenue --sort revenue --top 10
+
+# Live process table
+ps -A -o user,pid,rss,%cpu,comm | tplot table - --bars rss --sort rss --top 15
+```
+
+Box-drawn borders (square or `--rounded`), columns auto-typed (numbers right-aligned with thousands separators, booleans rendered as `✓`/`✗` and centered, text left-aligned). The `--bars` column gets an inline `▁▂▃▄▅▆▇█` bar proportional to its column max. The row with the highest value in the bars column lights up in burnt orange when it clearly dominates (trust-score gate); the rest stay context-gray.
 
 ```bash
 # Inspect what tplot detected about your terminal

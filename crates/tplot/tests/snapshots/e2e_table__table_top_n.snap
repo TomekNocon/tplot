@@ -1,0 +1,13 @@
+---
+source: crates/tplot/tests/e2e_table.rs
+expression: strip_ansi(&out)
+---
+┌─────────┬────────┬─────────┐
+│ quarter │ region │ revenue │
+├─────────┼────────┼─────────┤
+│ Q4      │ EMEA   │      72 │
+│ Q3      │ EMEA   │      55 │
+│ Q4      │ NA     │      47 │
+│ Q3      │ NA     │      46 │
+│ Q2      │ NA     │      44 │
+└─────────┴────────┴─────────┘

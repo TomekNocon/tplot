@@ -148,24 +148,24 @@ pub fn render_table(df: &DataFrame, opts: &TableOptions) -> Result<String> {
             out.push('\n');
             out.push_str(ann);
             out.push('\n');
-        } else if let Some(ri) = layout.focal_row {
-            if let Some(bi) = layout.bars_col_idx {
-                let row = &layout.rows[ri];
-                // Find a useful "name" for the row — first text column.
-                let name_idx = layout
-                    .columns
-                    .iter()
-                    .position(|c| matches!(c.kind, ColumnType::Text))
-                    .unwrap_or(0);
-                let name = &row[name_idx];
-                let value = &row[bi];
-                out.push('\n');
-                out.push_str(&format!(
-                    "{} leads with {} {}.",
-                    name, value, layout.columns[bi].name
-                ));
-                out.push('\n');
-            }
+        } else if let Some(ri) = layout.focal_row
+            && let Some(bi) = layout.bars_col_idx
+        {
+            let row = &layout.rows[ri];
+            // Find a useful "name" for the row — first text column.
+            let name_idx = layout
+                .columns
+                .iter()
+                .position(|c| matches!(c.kind, ColumnType::Text))
+                .unwrap_or(0);
+            let name = &row[name_idx];
+            let value = &row[bi];
+            out.push('\n');
+            out.push_str(&format!(
+                "{} leads with {} {}.",
+                name, value, layout.columns[bi].name
+            ));
+            out.push('\n');
         }
     }
 
@@ -297,7 +297,10 @@ fn render_row(
         let align_center = matches!(columns[ci].kind, ColumnType::Boolean);
 
         let text_w = text_part.chars().count();
-        let bar_w = bar_part.as_ref().map(|b| b.chars().count() + 1).unwrap_or(0);
+        let bar_w = bar_part
+            .as_ref()
+            .map(|b| b.chars().count() + 1)
+            .unwrap_or(0);
         let used = text_w + bar_w;
         let pad = cell_w.saturating_sub(used);
 
