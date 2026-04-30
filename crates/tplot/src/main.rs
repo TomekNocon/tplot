@@ -184,6 +184,25 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
+        Command::Candle(c) => {
+            let df = pipeline::read_dataframe(&c.input)?;
+            let (_, height) = pipeline::detected_terminal_size(c.common.width);
+            let out = commands::render_candlestick(
+                &df,
+                &commands::CandleOptions {
+                    x: c.x,
+                    open: c.open,
+                    high: c.high,
+                    low: c.low,
+                    close: c.close,
+                    graphics: c.common.graphics,
+                    width: c.common.width,
+                    height,
+                },
+            )?;
+            print!("{out}");
+            Ok(())
+        }
         Command::Doctor => {
             let report = commands::doctor::run()?;
             print!("{report}");

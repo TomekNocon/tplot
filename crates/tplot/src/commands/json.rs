@@ -1,7 +1,7 @@
 use crate::commands::{
-    AreaOptions, BoxOptions, HeatmapOptions, HistogramOptions, LineOptions, RenderOptions,
-    ScatterOptions, SparkOptions, render_bar, render_boxplot, render_heatmap, render_histogram,
-    render_line, render_scatter, render_stacked_area,
+    AreaOptions, BoxOptions, CandleOptions, HeatmapOptions, HistogramOptions, LineOptions,
+    RenderOptions, ScatterOptions, SparkOptions, render_bar, render_boxplot, render_heatmap,
+    render_histogram, render_line, render_scatter, render_stacked_area,
 };
 use anyhow::{Result, anyhow};
 use tplot_core::input::parse_json_str;
@@ -262,8 +262,27 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             };
             render_stacked_area(&parsed.dataframe, &opts)
         }
-        ChartKind::Candlestick { .. } => {
-            Err(anyhow!("candlestick JSON dispatch lands in plan 9 task 6"))
+        ChartKind::Candlestick {
+            open,
+            high,
+            low,
+            close,
+        } => {
+            let x = match spec.x {
+                Axis::Column(c) => c,
+                _ => return Err(anyhow!("inline x axis not supported in v1")),
+            };
+            let opts = CandleOptions {
+                x,
+                open,
+                high,
+                low,
+                close,
+                graphics: "none".into(),
+                width: Some(canvas_w),
+                height: canvas_h,
+            };
+            crate::commands::render_candlestick(&parsed.dataframe, &opts)
         }
     }
 }

@@ -48,6 +48,7 @@ const SUB_X_PER_CELL: usize = 1;
 const SUB_Y_PER_CELL: usize = 2;
 const Y_AXIS_LABEL_WIDTH: usize = 6;
 
+#[allow(clippy::too_many_arguments)]
 pub fn layout_candlestick(
     df: &DataFrame,
     x_col: &str,
