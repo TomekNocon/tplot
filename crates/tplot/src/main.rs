@@ -318,8 +318,10 @@ fn main() -> Result<()> {
                     y: s.y,
                     top: s.top.or(Some(5)),
                     palette_name: s.common.palette,
+                    focus: s.common.focus,
                     annotate: s.common.annotate,
                     neutral: s.common.neutral,
+                    no_takeaway: s.common.no_takeaway,
                 },
             )?;
             print!("{out}");

@@ -419,8 +419,13 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
                 y,
                 top: top.or(Some(5)),
                 palette_name: "signature".into(),
+                focus: match spec.story.focus {
+                    tplot_protocol::FocusMode::Series(s) => Some(s),
+                    _ => None,
+                },
                 annotate: spec.story.annotation,
                 neutral: !spec.story.enabled,
+                no_takeaway: !spec.story.takeaway,
             };
             let _ = canvas_w;
             let _ = canvas_h;
