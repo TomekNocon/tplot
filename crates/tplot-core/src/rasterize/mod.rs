@@ -21,3 +21,6 @@ pub use stacked_area::rasterize_stacked_area;
 
 pub mod candlestick;
 pub use candlestick::rasterize_candlestick;
+
+pub mod treemap;
+pub use treemap::rasterize_treemap;
