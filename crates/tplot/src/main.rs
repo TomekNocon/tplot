@@ -6,8 +6,9 @@ use anyhow::Result;
 use clap::Parser;
 use cli::{Cli, Command};
 use commands::{
-    BoxOptions, HeatmapOptions, HistogramOptions, LineOptions, RenderOptions, ScatterOptions,
-    render_bar, render_boxplot, render_heatmap, render_histogram, render_line, render_scatter,
+    AreaOptions, BoxOptions, HeatmapOptions, HistogramOptions, LineOptions, RenderOptions,
+    ScatterOptions, render_bar, render_boxplot, render_heatmap, render_histogram, render_line,
+    render_scatter, render_stacked_area,
 };
 
 fn main() -> Result<()> {
@@ -157,8 +158,26 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
-        Command::Area(_) => {
-            anyhow::bail!("stacked-area dispatch lands in plan 5.5 task 7")
+        Command::Area(a) => {
+            let df = pipeline::read_dataframe(&a.input)?;
+            let (_, height) = pipeline::detected_terminal_size(a.common.width);
+            let out = render_stacked_area(
+                &df,
+                &AreaOptions {
+                    x: a.x,
+                    y: a.y,
+                    group: a.group,
+                    focus: a.common.focus,
+                    annotate: a.common.annotate,
+                    neutral: a.common.neutral,
+                    no_takeaway: a.common.no_takeaway,
+                    width: a.common.width,
+                    height,
+                    palette_name: a.common.palette,
+                },
+            )?;
+            print!("{out}");
+            Ok(())
         }
         Command::Json => {
             use std::io::Read;

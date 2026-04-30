@@ -1,7 +1,7 @@
 use crate::commands::{
-    BoxOptions, HeatmapOptions, HistogramOptions, LineOptions, RenderOptions, ScatterOptions,
-    SparkOptions, render_bar, render_boxplot, render_heatmap, render_histogram, render_line,
-    render_scatter,
+    AreaOptions, BoxOptions, HeatmapOptions, HistogramOptions, LineOptions, RenderOptions,
+    ScatterOptions, SparkOptions, render_bar, render_boxplot, render_heatmap, render_histogram,
+    render_line, render_scatter, render_stacked_area,
 };
 use anyhow::{Result, anyhow};
 use tplot_core::input::parse_json_str;
@@ -225,9 +225,35 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             };
             render_heatmap(&parsed.dataframe, &opts)
         }
-        ChartKind::StackedArea => Err(anyhow!(
-            "stacked-area JSON dispatch lands in plan 5.5 task 7"
-        )),
+        ChartKind::StackedArea => {
+            let x = match spec.x {
+                Axis::Column(c) => c,
+                _ => return Err(anyhow!("inline x axis not supported in v1")),
+            };
+            let y = match spec.y {
+                Axis::Column(c) => c,
+                _ => return Err(anyhow!("inline y axis not supported in v1")),
+            };
+            let group = spec.group.ok_or_else(|| {
+                anyhow!("stacked area requires a `group` column to define series")
+            })?;
+            let opts = AreaOptions {
+                x,
+                y,
+                group,
+                focus: match spec.story.focus {
+                    tplot_protocol::FocusMode::Series(s) => Some(s),
+                    _ => None,
+                },
+                annotate: spec.story.annotation,
+                neutral: !spec.story.enabled,
+                no_takeaway: !spec.story.takeaway,
+                width: Some(canvas_w),
+                height: canvas_h,
+                palette_name: "signature".into(),
+            };
+            render_stacked_area(&parsed.dataframe, &opts)
+        }
     }
 }
 
