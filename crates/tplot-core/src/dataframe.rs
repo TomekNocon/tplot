@@ -104,6 +104,29 @@ impl DataFrame {
     pub fn nrows(&self) -> usize {
         self.columns.first().map(|c| c.len()).unwrap_or(0)
     }
+
+    /// Names of all columns whose `Series` is `Numbers`.
+    pub fn numeric_columns(&self) -> Vec<&str> {
+        self.columns
+            .iter()
+            .filter(|c| matches!(c.series(), Series::Numbers(_)))
+            .map(|c| c.name())
+            .collect()
+    }
+}
+
+/// Format a list of column names as a comma-separated, backtick-quoted string.
+/// Returns "(none)" for an empty list.
+pub fn comma_list(names: Vec<&str>) -> String {
+    if names.is_empty() {
+        "(none)".to_string()
+    } else {
+        names
+            .iter()
+            .map(|n| format!("`{n}`"))
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
 }
 
 fn levenshtein(a: &str, b: &str) -> usize {
@@ -156,6 +179,19 @@ mod tests {
         let err = df.column("revneue").unwrap_err();
         // Did-you-mean lists at least the closest column.
         assert!(err.to_string().contains("revenue"));
+    }
+
+    #[test]
+    fn numeric_columns_lists_only_numeric() {
+        let df = sample();
+        let numeric = df.numeric_columns();
+        assert_eq!(numeric, vec!["revenue"]);
+    }
+
+    #[test]
+    fn comma_list_formats_with_backticks() {
+        assert_eq!(comma_list(vec!["a", "b"]), "`a`, `b`");
+        assert_eq!(comma_list(vec![]), "(none)");
     }
 
     #[test]

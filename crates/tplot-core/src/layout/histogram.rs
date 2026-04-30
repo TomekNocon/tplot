@@ -1,4 +1,4 @@
-use crate::dataframe::{Column, DataFrame, Series};
+use crate::dataframe::{Column, DataFrame, Series, comma_list};
 use crate::layout::vertical_bar::{VerticalBarLayout, VerticalBarLayoutError, layout_vertical_bar};
 
 #[derive(Debug, Clone)]
@@ -12,8 +12,8 @@ pub struct HistogramLayout {
 
 #[derive(Debug, thiserror::Error)]
 pub enum HistogramError {
-    #[error("column `{0}` must be numeric")]
-    NonNumeric(String),
+    #[error("column `{name}` must be numeric (numeric columns: {numeric})")]
+    NonNumeric { name: String, numeric: String },
     #[error("no data rows")]
     Empty,
     #[error(transparent)]
@@ -31,7 +31,12 @@ pub fn layout_histogram(
 ) -> Result<HistogramLayout, HistogramError> {
     let values: Vec<f64> = match df.column(value_col)?.series() {
         Series::Numbers(v) => v.clone(),
-        Series::Strings(_) => return Err(HistogramError::NonNumeric(value_col.to_string())),
+        Series::Strings(_) => {
+            return Err(HistogramError::NonNumeric {
+                name: value_col.to_string(),
+                numeric: comma_list(df.numeric_columns()),
+            });
+        }
     };
     if values.is_empty() {
         return Err(HistogramError::Empty);
@@ -153,6 +158,22 @@ mod tests {
                 bar.label
             );
         }
+    }
+
+    #[test]
+    fn non_numeric_value_lists_alternatives() {
+        let df = DataFrame::from_columns(vec![
+            Column::new(
+                "label",
+                Series::Strings(vec!["A".into(), "B".into()]),
+            ),
+            Column::new("count", Series::Numbers(vec![1.0, 2.0])),
+        ])
+        .unwrap();
+        let err = layout_histogram(&df, "label", None, 80, 16).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("must be numeric"));
+        assert!(msg.contains("count"), "error should list numeric alternatives: {msg}");
     }
 
     #[test]

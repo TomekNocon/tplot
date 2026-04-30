@@ -1,4 +1,4 @@
-use crate::dataframe::{DataFrame, Series};
+use crate::dataframe::{DataFrame, Series, comma_list};
 pub use crate::layout::bar::PlotBox;
 
 #[derive(Debug, Clone)]
@@ -26,10 +26,10 @@ pub struct LineLayout {
 
 #[derive(Debug, thiserror::Error)]
 pub enum LineLayoutError {
-    #[error("x column `{0}` must be numeric")]
-    NonNumericX(String),
-    #[error("y column `{0}` must be numeric")]
-    NonNumericY(String),
+    #[error("x column `{name}` must be numeric (numeric columns: {numeric})")]
+    NonNumericX { name: String, numeric: String },
+    #[error("y column `{name}` must be numeric (numeric columns: {numeric})")]
+    NonNumericY { name: String, numeric: String },
     #[error("no data rows")]
     Empty,
     #[error(transparent)]
@@ -50,11 +50,21 @@ pub fn layout_line(
 ) -> Result<LineLayout, LineLayoutError> {
     let xs: Vec<f64> = match df.column(x_col)?.series() {
         Series::Numbers(v) => v.clone(),
-        Series::Strings(_) => return Err(LineLayoutError::NonNumericX(x_col.to_string())),
+        Series::Strings(_) => {
+            return Err(LineLayoutError::NonNumericX {
+                name: x_col.to_string(),
+                numeric: comma_list(df.numeric_columns()),
+            });
+        }
     };
     let ys: Vec<f64> = match df.column(y_col)?.series() {
         Series::Numbers(v) => v.clone(),
-        Series::Strings(_) => return Err(LineLayoutError::NonNumericY(y_col.to_string())),
+        Series::Strings(_) => {
+            return Err(LineLayoutError::NonNumericY {
+                name: y_col.to_string(),
+                numeric: comma_list(df.numeric_columns()),
+            });
+        }
     };
     if xs.is_empty() {
         return Err(LineLayoutError::Empty);
@@ -179,6 +189,22 @@ mod tests {
         let last_x = pts[pts.len() - 1].0;
         assert!(first_x < 4);
         assert!(last_x > layout.plot_box.pixel_width - 8);
+    }
+
+    #[test]
+    fn non_numeric_y_lists_alternatives() {
+        let df = DataFrame::from_columns(vec![
+            Column::new("t", Series::Numbers(vec![1.0, 2.0])),
+            Column::new(
+                "label",
+                Series::Strings(vec!["a".into(), "b".into()]),
+            ),
+        ])
+        .unwrap();
+        let err = layout_line(&df, "t", "label", None, 80, 16).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("must be numeric"));
+        assert!(msg.contains("`t`"), "error should list numeric alternatives: {msg}");
     }
 
     #[test]

@@ -1,4 +1,4 @@
-use crate::dataframe::{DataFrame, Series};
+use crate::dataframe::{DataFrame, Series, comma_list};
 pub use crate::layout::bar::PlotBox;
 use tplot_protocol::{HeatRamp, RgbColor};
 
@@ -25,8 +25,8 @@ pub struct HeatmapLayout {
 
 #[derive(Debug, thiserror::Error)]
 pub enum HeatmapError {
-    #[error("value column `{0}` must be numeric")]
-    NonNumericValue(String),
+    #[error("value column `{name}` must be numeric (numeric columns: {numeric})")]
+    NonNumericValue { name: String, numeric: String },
     #[error("no data rows")]
     Empty,
     #[error(transparent)]
@@ -54,7 +54,12 @@ pub fn layout_heatmap(
     };
     let vs: Vec<f64> = match df.column(value_col)?.series() {
         Series::Numbers(v) => v.clone(),
-        Series::Strings(_) => return Err(HeatmapError::NonNumericValue(value_col.to_string())),
+        Series::Strings(_) => {
+            return Err(HeatmapError::NonNumericValue {
+                name: value_col.to_string(),
+                numeric: comma_list(df.numeric_columns()),
+            });
+        }
     };
     if xs.is_empty() {
         return Err(HeatmapError::Empty);
@@ -229,6 +234,16 @@ mod tests {
         let max_color = layout.cell_colors[max_iy][max_ix].unwrap();
         // Inferno end is red-ish.
         assert!(max_color.r > 150);
+    }
+
+    #[test]
+    fn non_numeric_value_lists_alternatives() {
+        let df = small_grid_df();
+        let err =
+            layout_heatmap(&df, "hour", "day", "hour", HeatRamp::Inferno, 80, 16).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("must be numeric"));
+        assert!(msg.contains("count"), "error should list numeric alternatives: {msg}");
     }
 
     #[test]

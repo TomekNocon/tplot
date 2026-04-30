@@ -1,4 +1,4 @@
-use crate::dataframe::{DataFrame, Series};
+use crate::dataframe::{DataFrame, Series, comma_list};
 pub use crate::layout::bar::PlotBox;
 
 #[derive(Debug, Clone)]
@@ -31,10 +31,10 @@ pub struct StackedAreaLayout {
 
 #[derive(Debug, thiserror::Error)]
 pub enum StackedAreaError {
-    #[error("x column `{0}` must be numeric")]
-    NonNumericX(String),
-    #[error("y column `{0}` must be numeric")]
-    NonNumericY(String),
+    #[error("x column `{name}` must be numeric (numeric columns: {numeric})")]
+    NonNumericX { name: String, numeric: String },
+    #[error("y column `{name}` must be numeric (numeric columns: {numeric})")]
+    NonNumericY { name: String, numeric: String },
     #[error("no data rows")]
     Empty,
     #[error(transparent)]
@@ -55,11 +55,21 @@ pub fn layout_stacked_area(
 ) -> Result<StackedAreaLayout, StackedAreaError> {
     let xs: Vec<f64> = match df.column(x_col)?.series() {
         Series::Numbers(v) => v.clone(),
-        Series::Strings(_) => return Err(StackedAreaError::NonNumericX(x_col.to_string())),
+        Series::Strings(_) => {
+            return Err(StackedAreaError::NonNumericX {
+                name: x_col.to_string(),
+                numeric: comma_list(df.numeric_columns()),
+            });
+        }
     };
     let ys: Vec<f64> = match df.column(y_col)?.series() {
         Series::Numbers(v) => v.clone(),
-        Series::Strings(_) => return Err(StackedAreaError::NonNumericY(y_col.to_string())),
+        Series::Strings(_) => {
+            return Err(StackedAreaError::NonNumericY {
+                name: y_col.to_string(),
+                numeric: comma_list(df.numeric_columns()),
+            });
+        }
     };
     let groups: Vec<String> = match df.column(group_col)?.series() {
         Series::Strings(v) => v.clone(),
@@ -195,6 +205,23 @@ mod tests {
         let emea = layout.series.iter().find(|s| s.key == "EMEA").unwrap();
         assert!((na.total - 70.0).abs() < 1e-6);
         assert!((emea.total - 16.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn non_numeric_y_lists_alternatives() {
+        let df = DataFrame::from_columns(vec![
+            Column::new("month", Series::Numbers(vec![1.0, 2.0])),
+            Column::new("rev", Series::Numbers(vec![10.0, 20.0])),
+            Column::new(
+                "g",
+                Series::Strings(vec!["NA".into(), "EMEA".into()]),
+            ),
+        ])
+        .unwrap();
+        let err = layout_stacked_area(&df, "month", "g", "g", 80, 16).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("must be numeric"));
+        assert!(msg.contains("rev"), "error should list numeric alternatives: {msg}");
     }
 
     #[test]

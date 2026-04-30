@@ -1,7 +1,7 @@
 //! Box plot layout — long-form input grouped by `x_col`, per-group 5-number
 //! summary, mapped to pixel-y space (inverted: high data → low pixel y).
 
-use crate::dataframe::{DataFrame, Series};
+use crate::dataframe::{DataFrame, Series, comma_list};
 use crate::layout::bar::PlotBox;
 use crate::stats::{FiveNumberSummary, five_number_summary};
 
@@ -36,8 +36,8 @@ pub struct BoxPlotLayout {
 
 #[derive(Debug, thiserror::Error)]
 pub enum BoxPlotError {
-    #[error("y column `{0}` must be numeric")]
-    NonNumericY(String),
+    #[error("y column `{name}` must be numeric (numeric columns: {numeric})")]
+    NonNumericY { name: String, numeric: String },
     #[error("no data rows")]
     Empty,
     #[error(transparent)]
@@ -61,7 +61,12 @@ pub fn layout_boxplot(
     };
     let values: Vec<f64> = match df.column(y_col)?.series() {
         Series::Numbers(v) => v.clone(),
-        Series::Strings(_) => return Err(BoxPlotError::NonNumericY(y_col.to_string())),
+        Series::Strings(_) => {
+            return Err(BoxPlotError::NonNumericY {
+                name: y_col.to_string(),
+                numeric: comma_list(df.numeric_columns()),
+            });
+        }
     };
     if labels.is_empty() {
         return Err(BoxPlotError::Empty);
@@ -222,6 +227,15 @@ mod tests {
             orders.summary.iqr(),
             users.summary.iqr()
         );
+    }
+
+    #[test]
+    fn non_numeric_y_lists_alternatives() {
+        let df = endpoints_df();
+        let err = layout_boxplot(&df, "endpoint", "endpoint", 80, 16).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("must be numeric"));
+        assert!(msg.contains("ms"), "error should list numeric alternatives: {msg}");
     }
 
     #[test]

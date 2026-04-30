@@ -1,4 +1,4 @@
-use crate::dataframe::{DataFrame, Series};
+use crate::dataframe::{DataFrame, Series, comma_list};
 
 pub use crate::layout::bar::PlotBox;
 
@@ -31,8 +31,8 @@ pub struct VerticalBarLayout {
 
 #[derive(Debug, thiserror::Error)]
 pub enum VerticalBarLayoutError {
-    #[error("y column `{0}` must be numeric")]
-    NonNumericY(String),
+    #[error("y column `{name}` must be numeric (numeric columns: {numeric})")]
+    NonNumericY { name: String, numeric: String },
     #[error("no data rows")]
     Empty,
     #[error("canvas too narrow for {n} bars (need at least {needed} cells, have {have})")]
@@ -62,7 +62,12 @@ pub fn layout_vertical_bar(
     };
     let values: Vec<f64> = match df.column(y_col)?.series() {
         Series::Numbers(v) => v.clone(),
-        Series::Strings(_) => return Err(VerticalBarLayoutError::NonNumericY(y_col.to_string())),
+        Series::Strings(_) => {
+            return Err(VerticalBarLayoutError::NonNumericY {
+                name: y_col.to_string(),
+                numeric: comma_list(df.numeric_columns()),
+            });
+        }
     };
     if labels.is_empty() {
         return Err(VerticalBarLayoutError::Empty);
@@ -195,6 +200,22 @@ mod tests {
         for bar in &layout.bars {
             assert!(bar.pixel_width >= 1, "bar {:?} too narrow", bar.label);
         }
+    }
+
+    #[test]
+    fn non_numeric_y_lists_alternatives() {
+        let df = DataFrame::from_columns(vec![
+            Column::new(
+                "month",
+                Series::Strings(vec!["Jan".into(), "Feb".into()]),
+            ),
+            Column::new("active", Series::Numbers(vec![10.0, 20.0])),
+        ])
+        .unwrap();
+        let err = layout_vertical_bar(&df, "month", "month", None, 80, 16).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("must be numeric"));
+        assert!(msg.contains("active"), "error should list numeric alternatives: {msg}");
     }
 
     #[test]

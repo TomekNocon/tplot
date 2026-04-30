@@ -1,4 +1,4 @@
-use crate::dataframe::{DataFrame, Series};
+use crate::dataframe::{DataFrame, Series, comma_list};
 
 /// Region of the buffer (in sub-pixel coords) reserved for the chart itself.
 /// In v1 the buffer holds *only* the plot area — labels and value strings are
@@ -39,8 +39,8 @@ pub struct BarLayout {
 
 #[derive(Debug, thiserror::Error)]
 pub enum LayoutError {
-    #[error("y column `{0}` must be numeric")]
-    NonNumericY(String),
+    #[error("y column `{name}` must be numeric (numeric columns: {numeric})")]
+    NonNumericY { name: String, numeric: String },
     #[error("no data rows")]
     Empty,
     #[error(transparent)]
@@ -64,7 +64,12 @@ pub fn layout_horizontal_bar(
     };
     let values: Vec<f64> = match df.column(y_col)?.series() {
         Series::Numbers(v) => v.clone(),
-        Series::Strings(_) => return Err(LayoutError::NonNumericY(y_col.to_string())),
+        Series::Strings(_) => {
+            return Err(LayoutError::NonNumericY {
+                name: y_col.to_string(),
+                numeric: comma_list(df.numeric_columns()),
+            });
+        }
     };
     if labels.is_empty() {
         return Err(LayoutError::Empty);
@@ -200,6 +205,25 @@ mod tests {
         let layout = layout_horizontal_bar(&small_df(), "region", "revenue", None, 80, 12).unwrap();
         // "LATAM" is 5 chars + 2 cells of padding.
         assert_eq!(layout.label_margin, 7);
+    }
+
+    #[test]
+    fn non_numeric_y_lists_alternatives() {
+        let df = DataFrame::from_columns(vec![
+            Column::new(
+                "region",
+                Series::Strings(vec!["NA".into(), "EMEA".into()]),
+            ),
+            Column::new("revenue", Series::Numbers(vec![10.0, 20.0])),
+        ])
+        .unwrap();
+        let err = layout_horizontal_bar(&df, "region", "region", None, 80, 12).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("must be numeric"));
+        assert!(
+            msg.contains("revenue"),
+            "error should list numeric alternatives: {msg}"
+        );
     }
 
     #[test]
