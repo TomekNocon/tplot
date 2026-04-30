@@ -18,3 +18,6 @@ pub use boxplot::rasterize_boxplot;
 
 pub mod stacked_area;
 pub use stacked_area::rasterize_stacked_area;
+
+pub mod candlestick;
+pub use candlestick::rasterize_candlestick;
