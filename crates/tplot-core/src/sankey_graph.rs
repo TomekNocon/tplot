@@ -63,14 +63,25 @@ pub fn build_graph(raws: &[RawEdge]) -> Result<SankeyGraph, SankeyGraphError> {
     }
 
     // Aggregate edge values: collapse duplicate (src, tgt) pairs into one.
-    let mut agg: std::collections::HashMap<(usize, usize), f64> = std::collections::HashMap::new();
+    // Preserve first-seen order so iteration is deterministic.
+    let mut edge_order: Vec<(usize, usize)> = Vec::new();
+    let mut edge_idx: std::collections::HashMap<(usize, usize), usize> =
+        std::collections::HashMap::new();
+    let mut edge_values: Vec<f64> = Vec::new();
     for r in raws {
         let s = name_to_idx[&r.source];
         let t = name_to_idx[&r.target];
-        *agg.entry((s, t)).or_insert(0.0) += r.value;
+        if let Some(&i) = edge_idx.get(&(s, t)) {
+            edge_values[i] += r.value;
+        } else {
+            edge_idx.insert((s, t), edge_values.len());
+            edge_order.push((s, t));
+            edge_values.push(r.value);
+        }
     }
-    let edges: Vec<SankeyEdge> = agg
+    let edges: Vec<SankeyEdge> = edge_order
         .into_iter()
+        .zip(edge_values)
         .map(|((source, target), value)| SankeyEdge {
             source,
             target,
@@ -184,12 +195,7 @@ mod tests {
     fn node_layer_is_max_of_predecessor_layers_plus_one() {
         // a → b, a → c, b → c. c receives from both a (layer 0) and b (layer 1).
         // c's layer should be max(0, 1) + 1 = 2.
-        let g = build_graph(&edges(&[
-            ("a", "b", 1.0),
-            ("a", "c", 1.0),
-            ("b", "c", 1.0),
-        ]))
-        .unwrap();
+        let g = build_graph(&edges(&[("a", "b", 1.0), ("a", "c", 1.0), ("b", "c", 1.0)])).unwrap();
         let c_layer = g.nodes.iter().position(|n| n.name == "c").unwrap();
         assert_eq!(g.nodes[c_layer].layer, 2);
     }

@@ -96,8 +96,8 @@ pub fn layout_sankey(
         let height_for_nodes = plot_pixels_h.saturating_sub(total_gaps);
         let scale = (height_for_nodes as f64) / max_layer_value;
         let layer_used_h: f64 = layer_total * scale;
-        let leading_y = ((plot_pixels_h as f64 - layer_used_h - total_gaps as f64) / 2.0).max(0.0)
-            as usize;
+        let leading_y =
+            ((plot_pixels_h as f64 - layer_used_h - total_gaps as f64) / 2.0).max(0.0) as usize;
 
         let layer_x = li * column_step + column_step / 2 - node_w / 2;
         let mut y = leading_y;
@@ -122,8 +122,10 @@ pub fn layout_sankey(
     // Compute edge endpoint placements.
     // For each source node, edges leaving it stack along its right edge in the
     // order of their targets' layer-position. Same logic for target endpoints.
-    let mut source_offset: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
-    let mut target_offset: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
+    let mut source_offset: std::collections::HashMap<usize, usize> =
+        std::collections::HashMap::new();
+    let mut target_offset: std::collections::HashMap<usize, usize> =
+        std::collections::HashMap::new();
 
     let scale = (plot_pixels_h as f64) / max_layer_value;
 

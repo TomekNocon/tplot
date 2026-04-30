@@ -59,8 +59,7 @@ fn paint_edge(
     for px in e.source_x..=e.target_x {
         let t = (px - e.source_x) as f64 / x_span.max(1.0);
         let s = smoothstep(t);
-        let y_top = e.source_y_top as f64
-            + (e.target_y_top as f64 - e.source_y_top as f64) * s;
+        let y_top = e.source_y_top as f64 + (e.target_y_top as f64 - e.source_y_top as f64) * s;
         let y_top = y_top.round() as usize;
         let y_bottom = y_top + e.edge_height.saturating_sub(1);
         buf.fill_rect(px, y_top, px, y_bottom, color);

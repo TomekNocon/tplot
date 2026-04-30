@@ -6,13 +6,13 @@ Storytelling-first chart engine for the terminal — Rust, fast, opinionated by 
 
 ## What's in this version (Plans 1 + 2 + 3 + 4 + 4.5 + 5 + 5.5 + 6 + 7 + 7b + 9 + 10)
 
-- Thirteen chart types: horizontal bar, vertical bar, histogram, line, scatter, sparkline, heatmap, box plot, stacked area, candlestick, treemap, violin, ridgeline.
+- Fourteen chart types: horizontal bar, vertical bar, histogram, line, scatter, sparkline, heatmap, box plot, stacked area, candlestick, treemap, violin, ridgeline, sankey.
 - Renderers:
   - half-blocks (truecolor + 256/16/mono fallback) for horizontal bars, heatmaps, box plots, and stacked area
   - vertical-block elements `▁▂▃▄▅▆▇█` for vertical bars, histograms, and sparklines
   - Braille (2×4 dots/cell) for line and scatter
 - Story-pass with chart-specific focal detection (max-value for bars, modal-bin for histograms, largest-delta for lines, point-count for scatter, hottest cell for heatmaps, widest-IQR for box plots, largest-total for stacked area), gray-down palette, and embedded takeaway lines. Trust-score gate refuses to highlight when no series clearly dominates. Sparklines stay deliberately minimal — single colored line, no story overhead.
-- CLI: `tplot bar [--vertical]`, `tplot hist`, `tplot line`, `tplot scatter`, `tplot spark`, `tplot heatmap`, `tplot box`, `tplot area`, `tplot candle`, `tplot tree`, `tplot violin`, `tplot ridge`, `tplot json` (stdin).
+- CLI: `tplot bar [--vertical]`, `tplot hist`, `tplot line`, `tplot scatter`, `tplot spark`, `tplot heatmap`, `tplot box`, `tplot area`, `tplot candle`, `tplot tree`, `tplot violin`, `tplot ridge`, `tplot sankey`, `tplot json` (stdin).
 - `tplot doctor` — prints a capability report (color depth, glyph set, theme, graphics-protocol detection). Run it once to see how `tplot` views your terminal.
 - `--graphics auto|kitty|iterm2|none` — emit a real PNG via the Kitty or iTerm2 inline-image protocol. `auto` picks the best protocol detected by probing; `none` (default) keeps the half-blocks/Braille text rendering.
 
@@ -159,6 +159,17 @@ mar,300" | tplot ridge - -x ms --group month
 ```
 
 Each row is one group's KDE (per-group normalized so every ridge keeps a visible shape), stacked top-to-bottom in first-seen order with controlled overlap. The widest-IQR group is the focal in burnt orange; the rest are grayed-down (same focal heuristic as the box plot and violin).
+
+```bash
+# Sankey diagram of a user funnel
+echo "src,tgt,flow
+landing,signup,7000
+landing,bounce,3000
+signup,verified,6000
+signup,abandoned,1000" | tplot sankey - --source src --target tgt --value flow
+```
+
+Nodes are placed in vertical layer columns (assigned via Kahn's topological sort), edges drawn as smoothstep-curved bands with width proportional to flow value. The largest single edge is highlighted in burnt orange; the rest are grayed-down. Errors out cleanly if the input forms a cycle (sankey requires a DAG).
 
 ```bash
 # Inspect what tplot detected about your terminal
