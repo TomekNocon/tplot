@@ -42,6 +42,8 @@ pub enum Command {
     Ridge(RidgeArgs),
     /// Sankey diagram — flow between named nodes.
     Sankey(SankeyArgs),
+    /// Pretty-printed table with inline bars and focal-row highlighting.
+    Table(TableArgs),
     /// Probe the terminal and print a capability report.
     Doctor,
     /// Read a JSON ChartSpec from stdin and render it.
@@ -260,6 +262,26 @@ pub struct SankeyArgs {
     /// Numeric column with the flow value.
     #[arg(long)]
     pub value: String,
+    #[command(flatten)]
+    pub common: CommonStoryArgs,
+}
+
+#[derive(Args, Debug)]
+pub struct TableArgs {
+    /// Path to CSV or JSON input. Use `-` for stdin.
+    pub input: String,
+    /// Column to render an inline value bar for (must be numeric).
+    #[arg(long)]
+    pub bars: Option<String>,
+    /// Column to sort by (descending). Must be numeric.
+    #[arg(long)]
+    pub sort: Option<String>,
+    /// Keep only the first N rows after sorting.
+    #[arg(long)]
+    pub top: Option<usize>,
+    /// Use rounded corners on the box border.
+    #[arg(long)]
+    pub rounded: bool,
     #[command(flatten)]
     pub common: CommonStoryArgs,
 }
@@ -606,6 +628,32 @@ mod tests {
         match args.command {
             Command::Bar(b) => assert_eq!(b.common.graphics, "none"),
             _ => panic!(),
+        }
+    }
+
+    #[test]
+    fn parses_table_subcommand() {
+        let args = Cli::parse_from([
+            "tplot",
+            "table",
+            "data.csv",
+            "--bars",
+            "revenue",
+            "--sort",
+            "revenue",
+            "--top",
+            "10",
+            "--rounded",
+        ]);
+        match args.command {
+            Command::Table(t) => {
+                assert_eq!(t.input, "data.csv");
+                assert_eq!(t.bars.as_deref(), Some("revenue"));
+                assert_eq!(t.sort.as_deref(), Some("revenue"));
+                assert_eq!(t.top, Some(10));
+                assert!(t.rounded);
+            }
+            _ => panic!("expected Table"),
         }
     }
 
