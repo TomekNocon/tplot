@@ -351,48 +351,40 @@ fn render_row(
         let used = text_w + bar_w;
         let pad = cell_w.saturating_sub(used);
 
+        // Open the cell style once (no-op if already active from prior cell).
+        // Whitespace and the column separator inherit the active style; for
+        // body color/bold this is visually identical to plain text on the
+        // separator, and avoids paying a per-cell escape pair.
+        open(&mut s, cell_style, &mut current);
         if align_right {
-            // Whitespace pad first — close any active style so spaces aren't
-            // styled (cheap reset, then we re-open when needed).
-            close_if_active(&mut s, &mut current);
             for _ in 0..pad {
                 s.push(' ');
             }
-            open(&mut s, cell_style, &mut current);
             let _ = write!(s, "{text_part}");
             if let Some(bar) = &bar_part {
-                close_if_active(&mut s, &mut current);
                 s.push(' ');
-                open(&mut s, cell_style, &mut current);
                 let _ = write!(s, "{bar}");
             }
         } else if align_center {
-            close_if_active(&mut s, &mut current);
             let lp = pad / 2;
             let rp = pad - lp;
             for _ in 0..lp {
                 s.push(' ');
             }
-            open(&mut s, cell_style, &mut current);
             let _ = write!(s, "{text_part}");
-            close_if_active(&mut s, &mut current);
             for _ in 0..rp {
                 s.push(' ');
             }
         } else {
-            open(&mut s, cell_style, &mut current);
             let _ = write!(s, "{text_part}");
-            close_if_active(&mut s, &mut current);
             for _ in 0..pad {
                 s.push(' ');
             }
         }
-        // Vertical separator: ensure plain output (no styled glyphs).
-        close_if_active(&mut s, &mut current);
         s.push(' ');
         s.push(v_glyph);
     }
-    // End-of-row reset, in case the last cell left styling open.
+    // End-of-row reset clears any active style.
     close_if_active(&mut s, &mut current);
     s
 }
