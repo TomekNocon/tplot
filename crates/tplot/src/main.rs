@@ -288,6 +288,27 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
+        Command::Table(t) => {
+            let df = pipeline::read_dataframe(&t.input)?;
+            let out = commands::render_table(
+                &df,
+                &commands::TableOptions {
+                    bars: t.bars,
+                    sort: t.sort,
+                    top: t.top,
+                    focus: t.common.focus,
+                    annotate: t.common.annotate,
+                    neutral: t.common.neutral,
+                    no_takeaway: t.common.no_takeaway,
+                    graphics: t.common.graphics,
+                    width: t.common.width,
+                    palette_name: t.common.palette,
+                    rounded: t.rounded,
+                },
+            )?;
+            print!("{out}");
+            Ok(())
+        }
         Command::Doctor => {
             let report = commands::doctor::run()?;
             print!("{report}");
