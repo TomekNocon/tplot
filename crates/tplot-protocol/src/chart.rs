@@ -49,6 +49,16 @@ pub enum ChartKind {
         target: String,
         value: String,
     },
+    /// Pretty-printed table — auto-typed columns, optional inline value bars
+    /// for a designated column, sortable, top-N filter, focal-row highlighting.
+    Table {
+        #[serde(default)]
+        bars: Option<String>, // column name to render an inline bar for
+        #[serde(default)]
+        sort: Option<String>, // column name to sort by (descending)
+        #[serde(default)]
+        top: Option<usize>, // keep only the top N rows after sorting
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -281,6 +291,24 @@ mod tests {
             kind: ChartKind::Treemap,
             x: Axis::Column("category".into()),
             y: Axis::Column("value".into()),
+            group: None,
+            title: None,
+            story: StoryConfig::default(),
+        };
+        let json = serde_json::to_string(&spec).unwrap();
+        assert_eq!(serde_json::from_str::<ChartSpec>(&json).unwrap(), spec);
+    }
+
+    #[test]
+    fn table_spec_round_trip() {
+        let spec = ChartSpec {
+            kind: ChartKind::Table {
+                bars: Some("revenue".into()),
+                sort: Some("revenue".into()),
+                top: Some(10),
+            },
+            x: Axis::Column("__row__".into()),
+            y: Axis::Column("__col__".into()),
             group: None,
             title: None,
             story: StoryConfig::default(),

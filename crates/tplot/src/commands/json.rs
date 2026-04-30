@@ -385,6 +385,7 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             };
             crate::commands::render_sankey(&parsed.dataframe, &opts)
         }
+        ChartKind::Table { .. } => Err(anyhow!("table JSON dispatch lands in plan 13 task 6")),
     }
 }
 
