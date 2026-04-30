@@ -40,6 +40,9 @@ pub use sankey::{SankeyOptions, render_sankey};
 pub mod table;
 pub use table::{TableOptions, render_table};
 
+pub mod summary;
+pub use summary::{SummaryOptions, render_summary};
+
 pub mod json;
 pub use json::render_from_json;
 
