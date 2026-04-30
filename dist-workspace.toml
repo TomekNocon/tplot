@@ -17,3 +17,5 @@ install-path = "CARGO_HOME"
 hosting = "github"
 # Whether to install an updater program
 install-updater = false
+# Allow manual edits to generated CI files (e.g. adding workflow_dispatch)
+allow-dirty = ["ci"]
