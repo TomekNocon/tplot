@@ -59,6 +59,13 @@ pub enum ChartKind {
         #[serde(default)]
         top: Option<usize>, // keep only the top N rows after sorting
     },
+    /// Single-line data summary with embedded sparkline + headline stats.
+    /// Optimized for inline conversational use (always 1 line, never collapsed).
+    Summary {
+        /// In categorical mode, keep only the top N categories. Ignored in sequence mode.
+        #[serde(default)]
+        top: Option<usize>,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -289,6 +296,20 @@ mod tests {
     fn treemap_spec_round_trip() {
         let spec = ChartSpec {
             kind: ChartKind::Treemap,
+            x: Axis::Column("category".into()),
+            y: Axis::Column("value".into()),
+            group: None,
+            title: None,
+            story: StoryConfig::default(),
+        };
+        let json = serde_json::to_string(&spec).unwrap();
+        assert_eq!(serde_json::from_str::<ChartSpec>(&json).unwrap(), spec);
+    }
+
+    #[test]
+    fn summary_spec_round_trip() {
+        let spec = ChartSpec {
+            kind: ChartKind::Summary { top: Some(5) },
             x: Axis::Column("category".into()),
             y: Axis::Column("value".into()),
             group: None,

@@ -405,6 +405,11 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             let _ = canvas_h;
             crate::commands::render_table(&parsed.dataframe, &opts)
         }
+        ChartKind::Summary { .. } => {
+            let _ = canvas_w;
+            let _ = canvas_h;
+            Err(anyhow!("summary JSON dispatch lands in plan 13.6 task 5"))
+        }
     }
 }
 
