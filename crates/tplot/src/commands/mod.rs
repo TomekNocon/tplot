@@ -22,6 +22,9 @@ pub use boxplot::{BoxOptions, render_boxplot};
 pub mod stacked_area;
 pub use stacked_area::{AreaOptions, render_stacked_area};
 
+pub mod candlestick;
+pub use candlestick::{CandleOptions, render_candlestick};
+
 pub mod json;
 pub use json::render_from_json;
 
