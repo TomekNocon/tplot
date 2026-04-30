@@ -203,6 +203,27 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
+        Command::Tree(t) => {
+            let df = pipeline::read_dataframe(&t.input)?;
+            let (_, height) = pipeline::detected_terminal_size(t.common.width);
+            let out = commands::render_treemap(
+                &df,
+                &commands::TreeOptions {
+                    x: t.x,
+                    y: t.y,
+                    focus: t.common.focus,
+                    annotate: t.common.annotate,
+                    neutral: t.common.neutral,
+                    no_takeaway: t.common.no_takeaway,
+                    graphics: t.common.graphics,
+                    width: t.common.width,
+                    height,
+                    palette_name: t.common.palette,
+                },
+            )?;
+            print!("{out}");
+            Ok(())
+        }
         Command::Doctor => {
             let report = commands::doctor::run()?;
             print!("{report}");

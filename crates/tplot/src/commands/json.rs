@@ -1,7 +1,7 @@
 use crate::commands::{
     AreaOptions, BoxOptions, CandleOptions, HeatmapOptions, HistogramOptions, LineOptions,
-    RenderOptions, ScatterOptions, SparkOptions, render_bar, render_boxplot, render_heatmap,
-    render_histogram, render_line, render_scatter, render_stacked_area,
+    RenderOptions, ScatterOptions, SparkOptions, TreeOptions, render_bar, render_boxplot,
+    render_heatmap, render_histogram, render_line, render_scatter, render_stacked_area,
 };
 use anyhow::{Result, anyhow};
 use tplot_core::input::parse_json_str;
@@ -285,7 +285,30 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             crate::commands::render_candlestick(&parsed.dataframe, &opts)
         }
         ChartKind::Treemap => {
-            Err(anyhow!("treemap JSON dispatch lands in plan 10 task 8"))
+            let x = match spec.x {
+                Axis::Column(c) => c,
+                _ => return Err(anyhow!("inline x axis not supported in v1")),
+            };
+            let y = match spec.y {
+                Axis::Column(c) => c,
+                _ => return Err(anyhow!("inline y axis not supported in v1")),
+            };
+            let opts = TreeOptions {
+                x,
+                y,
+                focus: match spec.story.focus {
+                    tplot_protocol::FocusMode::Series(s) => Some(s),
+                    _ => None,
+                },
+                annotate: spec.story.annotation,
+                neutral: !spec.story.enabled,
+                no_takeaway: !spec.story.takeaway,
+                graphics: "none".into(),
+                width: Some(canvas_w),
+                height: canvas_h,
+                palette_name: "signature".into(),
+            };
+            crate::commands::render_treemap(&parsed.dataframe, &opts)
         }
     }
 }
