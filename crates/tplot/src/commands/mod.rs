@@ -28,6 +28,9 @@ pub use candlestick::{CandleOptions, render_candlestick};
 pub mod treemap;
 pub use treemap::{TreeOptions, render_treemap};
 
+pub mod violin;
+pub use violin::{ViolinOptions, render_violin};
+
 pub mod json;
 pub use json::render_from_json;
 
