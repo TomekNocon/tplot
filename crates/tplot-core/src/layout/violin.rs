@@ -136,16 +136,19 @@ pub fn layout_violin(
         })
         .collect();
 
-    // Compute KDE for each group; remember the global maximum density.
+    // Compute KDE for each group, then PER-GROUP normalize: each group's
+    // max density maps to max half-width. This preserves shape detail for
+    // every group regardless of how peaky the others are. (Cross-group
+    // density comparison via direct width is sacrificed; box-plot style
+    // markers like the median line still encode comparable info.)
     let kdes: Vec<Vec<f64>> = summaries
         .iter()
         .map(|(_, _, vs)| kde_evaluate(vs, &grid))
         .collect();
-    let global_max_density = kdes
+    let per_group_max: Vec<f64> = kdes
         .iter()
-        .flat_map(|d| d.iter().copied())
-        .fold(0.0_f64, f64::max)
-        .max(1e-12);
+        .map(|d| d.iter().copied().fold(0.0_f64, f64::max).max(1e-12))
+        .collect();
 
     let max_half_width_pixels = (bar_cell_width / 2).max(1) * SUB_X_PER_CELL;
 
@@ -159,6 +162,7 @@ pub fn layout_violin(
         .enumerate()
         .zip(kdes)
         .map(|((i, (label, summary, _)), densities)| {
+            let local_max = per_group_max[i];
             // Resample densities from GRID_POINTS to plot_pixels_h pixels.
             let half_widths: Vec<usize> = (0..plot_pixels_h)
                 .map(|py| {
@@ -166,9 +170,7 @@ pub fn layout_violin(
                     let frac = py as f64 / (plot_pixels_h - 1).max(1) as f64;
                     let gi = (frac * (GRID_POINTS - 1) as f64).round() as usize;
                     let d = densities[gi.min(GRID_POINTS - 1)];
-                    let raw = (d / global_max_density) * max_half_width_pixels as f64;
-                    // Any non-trivial density paints at least 1 pixel so groups
-                    // dwarfed by a tight cluster's peak still appear.
+                    let raw = (d / local_max) * max_half_width_pixels as f64;
                     if raw > 0.05 {
                         raw.round().max(1.0) as usize
                     } else {
