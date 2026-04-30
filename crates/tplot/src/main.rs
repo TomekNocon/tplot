@@ -309,6 +309,22 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
+        Command::Summary(s) => {
+            let df = pipeline::read_dataframe(&s.input)?;
+            let out = commands::render_summary(
+                &df,
+                &commands::SummaryOptions {
+                    x: s.x,
+                    y: s.y,
+                    top: s.top.or(Some(5)),
+                    palette_name: s.common.palette,
+                    annotate: s.common.annotate,
+                    neutral: s.common.neutral,
+                },
+            )?;
+            print!("{out}");
+            Ok(())
+        }
         Command::Doctor => {
             let report = commands::doctor::run()?;
             print!("{report}");
