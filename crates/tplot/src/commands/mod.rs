@@ -25,6 +25,9 @@ pub use stacked_area::{AreaOptions, render_stacked_area};
 pub mod candlestick;
 pub use candlestick::{CandleOptions, render_candlestick};
 
+pub mod treemap;
+pub use treemap::{TreeOptions, render_treemap};
+
 pub mod json;
 pub use json::render_from_json;
 
