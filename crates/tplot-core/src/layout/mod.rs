@@ -32,3 +32,6 @@ pub use treemap::{TreemapError, TreemapLayout, TreemapLeaf, layout_treemap};
 
 pub mod violin;
 pub use violin::{Violin, ViolinError, ViolinLayout, layout_violin};
+
+pub mod ridgeline;
+pub use ridgeline::{Ridge, RidgelineError, RidgelineLayout, layout_ridgeline};
