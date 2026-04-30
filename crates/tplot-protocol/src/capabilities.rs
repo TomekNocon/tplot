@@ -111,12 +111,11 @@ where
     //    or white) is a light terminal; ≤ 6 is dark.
     if let Some(raw) = get("COLORFGBG") {
         let parts: Vec<&str> = raw.split(';').collect();
-        if parts.len() >= 2 {
-            if let Some(bg_str) = parts.last() {
-                if let Ok(bg) = bg_str.trim().parse::<u8>() {
-                    return if bg >= 7 { Theme::Light } else { Theme::Dark };
-                }
-            }
+        if parts.len() >= 2
+            && let Some(bg_str) = parts.last()
+            && let Ok(bg) = bg_str.trim().parse::<u8>()
+        {
+            return if bg >= 7 { Theme::Light } else { Theme::Dark };
         }
     }
     // 2. Apple Terminal defaults to a light theme.

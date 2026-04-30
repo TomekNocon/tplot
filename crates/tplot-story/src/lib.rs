@@ -8,14 +8,14 @@ pub use focal::{
     FocalChoice, FocalResult, SeriesPoint, SeriesSpread, SeriesTotal, SeriesTrend, pick_focal,
     pick_focal_by_delta, pick_focal_by_iqr, pick_focal_by_total,
 };
-pub use palette::build_palette_map;
+pub use palette::{build_palette_map, build_palette_map_for};
 pub use takeaway::{
     bar_takeaway, boxplot_takeaway, heatmap_takeaway, histogram_takeaway, line_takeaway,
     stacked_area_takeaway,
 };
 
 use std::collections::HashMap;
-use tplot_protocol::{FocusMode, Palette, RgbColor, StoryConfig};
+use tplot_protocol::{FocusMode, Palette, RgbColor, StoryConfig, Theme};
 
 #[derive(Debug, Clone)]
 pub struct StoryAnnotated {
@@ -26,10 +26,23 @@ pub struct StoryAnnotated {
 
 /// Run the story-pass on a single-series bar chart with the given series
 /// values. Returns a `StoryAnnotated` ready for the layout/render stages.
+///
+/// Backwards-compatible wrapper that defaults to `Theme::Dark`. Prefer
+/// [`run_bar_story_pass_with_theme`] when the caller knows the terminal theme.
 pub fn run_bar_story_pass(
     series: &[SeriesPoint],
     config: &StoryConfig,
     palette: Palette,
+) -> StoryAnnotated {
+    run_bar_story_pass_with_theme(series, config, palette, Theme::Dark)
+}
+
+/// Theme-aware variant of [`run_bar_story_pass`].
+pub fn run_bar_story_pass_with_theme(
+    series: &[SeriesPoint],
+    config: &StoryConfig,
+    palette: Palette,
+    theme: Theme,
 ) -> StoryAnnotated {
     if !config.enabled {
         // Neutral mode: every series gets the focal color (deliberately —
@@ -65,7 +78,7 @@ pub fn run_bar_story_pass(
     };
 
     let keys: Vec<&str> = series.iter().map(|p| p.key.as_str()).collect();
-    let palette_map = build_palette_map(&keys, focal_name, palette);
+    let palette_map = build_palette_map_for(&keys, focal_name, palette, theme);
 
     let takeaway = if !config.takeaway {
         None
@@ -93,10 +106,22 @@ pub fn run_bar_story_pass(
 /// Run the story-pass on a histogram (one bin per `SeriesPoint`). Picks the
 /// modal bin via `pick_focal` (max-vs-median dominance ≥ 1.5×) and emits a
 /// modal-cluster takeaway.
+///
+/// Backwards-compatible wrapper that defaults to `Theme::Dark`.
 pub fn run_histogram_story_pass(
     bins: &[SeriesPoint],
     config: &StoryConfig,
     palette: Palette,
+) -> StoryAnnotated {
+    run_histogram_story_pass_with_theme(bins, config, palette, Theme::Dark)
+}
+
+/// Theme-aware variant of [`run_histogram_story_pass`].
+pub fn run_histogram_story_pass_with_theme(
+    bins: &[SeriesPoint],
+    config: &StoryConfig,
+    palette: Palette,
+    theme: Theme,
 ) -> StoryAnnotated {
     if !config.enabled {
         let map = bins
@@ -131,7 +156,7 @@ pub fn run_histogram_story_pass(
     };
 
     let keys: Vec<&str> = bins.iter().map(|p| p.key.as_str()).collect();
-    let palette_map = build_palette_map(&keys, focal_name, palette);
+    let palette_map = build_palette_map_for(&keys, focal_name, palette, theme);
 
     let takeaway = if !config.takeaway {
         None
@@ -154,10 +179,22 @@ pub fn run_histogram_story_pass(
 /// Run the story-pass on a line chart. `trends` is the per-series first/last
 /// summary; the focal series is picked by largest absolute delta, gated by a
 /// 1.5× trust threshold against the median delta.
+///
+/// Backwards-compatible wrapper that defaults to `Theme::Dark`.
 pub fn run_line_story_pass(
     trends: &[SeriesTrend],
     config: &StoryConfig,
     palette: Palette,
+) -> StoryAnnotated {
+    run_line_story_pass_with_theme(trends, config, palette, Theme::Dark)
+}
+
+/// Theme-aware variant of [`run_line_story_pass`].
+pub fn run_line_story_pass_with_theme(
+    trends: &[SeriesTrend],
+    config: &StoryConfig,
+    palette: Palette,
+    theme: Theme,
 ) -> StoryAnnotated {
     if !config.enabled {
         let map = trends
@@ -191,7 +228,7 @@ pub fn run_line_story_pass(
     };
 
     let keys: Vec<&str> = trends.iter().map(|t| t.key.as_str()).collect();
-    let palette_map = build_palette_map(&keys, focal_name, palette);
+    let palette_map = build_palette_map_for(&keys, focal_name, palette, theme);
 
     let takeaway = if !config.takeaway {
         None
@@ -220,10 +257,22 @@ pub fn run_line_story_pass(
 /// focal series is picked by largest IQR, gated by a 1.5× trust threshold
 /// against the median IQR. Takeaway is `None` — the binary composes it with
 /// full Q1/Q3/min/max info from the layout.
+///
+/// Backwards-compatible wrapper that defaults to `Theme::Dark`.
 pub fn run_boxplot_story_pass(
     spreads: &[SeriesSpread],
     config: &StoryConfig,
     palette: Palette,
+) -> StoryAnnotated {
+    run_boxplot_story_pass_with_theme(spreads, config, palette, Theme::Dark)
+}
+
+/// Theme-aware variant of [`run_boxplot_story_pass`].
+pub fn run_boxplot_story_pass_with_theme(
+    spreads: &[SeriesSpread],
+    config: &StoryConfig,
+    palette: Palette,
+    theme: Theme,
 ) -> StoryAnnotated {
     if !config.enabled {
         let map = spreads
@@ -254,7 +303,7 @@ pub fn run_boxplot_story_pass(
         FocalChoice::None => None,
     };
     let keys: Vec<&str> = spreads.iter().map(|s| s.key.as_str()).collect();
-    let palette_map = build_palette_map(&keys, focal_name, palette);
+    let palette_map = build_palette_map_for(&keys, focal_name, palette, theme);
     StoryAnnotated {
         focal: focal_name.map(String::from),
         palette_map,
@@ -266,10 +315,22 @@ pub fn run_boxplot_story_pass(
 /// cumulative total; the focal series is picked by largest total, gated by a
 /// 1.5× trust threshold against the median total. Takeaway is `None` — the
 /// binary composes it with the grand total from the layout.
+///
+/// Backwards-compatible wrapper that defaults to `Theme::Dark`.
 pub fn run_stacked_area_story_pass(
     totals: &[SeriesTotal],
     config: &StoryConfig,
     palette: Palette,
+) -> StoryAnnotated {
+    run_stacked_area_story_pass_with_theme(totals, config, palette, Theme::Dark)
+}
+
+/// Theme-aware variant of [`run_stacked_area_story_pass`].
+pub fn run_stacked_area_story_pass_with_theme(
+    totals: &[SeriesTotal],
+    config: &StoryConfig,
+    palette: Palette,
+    theme: Theme,
 ) -> StoryAnnotated {
     if !config.enabled {
         let map = totals
@@ -300,7 +361,7 @@ pub fn run_stacked_area_story_pass(
         FocalChoice::None => None,
     };
     let keys: Vec<&str> = totals.iter().map(|t| t.key.as_str()).collect();
-    let palette_map = build_palette_map(&keys, focal_name, palette);
+    let palette_map = build_palette_map_for(&keys, focal_name, palette, theme);
     StoryAnnotated {
         focal: focal_name.map(String::from),
         palette_map,
@@ -386,6 +447,27 @@ mod tests {
         let s = run_histogram_story_pass(&bins, &StoryConfig::default(), Palette::Signature);
         assert_eq!(s.focal.as_deref(), Some("20–30"));
         assert!(s.takeaway.unwrap().contains("20–30"));
+    }
+
+    #[test]
+    fn bar_story_pass_with_light_theme_uses_darker_context_gray() {
+        let series = pts(&[("a", 100.0), ("b", 1.0), ("c", 1.0)]);
+        let cfg = StoryConfig::default();
+        let dark = run_bar_story_pass_with_theme(&series, &cfg, Palette::Signature, Theme::Dark);
+        let light = run_bar_story_pass_with_theme(&series, &cfg, Palette::Signature, Theme::Light);
+        // The non-focal `b` should be the context color, which differs by theme.
+        let dark_b = dark.palette_map.get("b").copied().unwrap();
+        let light_b = light.palette_map.get("b").copied().unwrap();
+        assert!(light_b.r < dark_b.r);
+    }
+
+    #[test]
+    fn run_bar_story_pass_default_matches_dark_theme() {
+        let series = pts(&[("a", 100.0), ("b", 1.0), ("c", 1.0)]);
+        let cfg = StoryConfig::default();
+        let default = run_bar_story_pass(&series, &cfg, Palette::Signature);
+        let dark = run_bar_story_pass_with_theme(&series, &cfg, Palette::Signature, Theme::Dark);
+        assert_eq!(default.palette_map, dark.palette_map);
     }
 
     #[test]
