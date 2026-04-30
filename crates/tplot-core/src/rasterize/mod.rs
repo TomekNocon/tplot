@@ -30,3 +30,6 @@ pub use violin::rasterize_violin;
 
 pub mod ridgeline;
 pub use ridgeline::rasterize_ridgeline;
+
+pub mod sankey;
+pub use sankey::rasterize_sankey;
