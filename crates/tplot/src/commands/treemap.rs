@@ -57,7 +57,12 @@ pub fn render_treemap(df: &DataFrame, opts: &TreeOptions) -> Result<String> {
 
     // Rasterize.
     let mut buf = PixelBuffer::new(layout.plot_box.pixel_width, layout.plot_box.pixel_height);
-    rasterize_treemap(&layout, story.focal.as_deref(), &story.palette_map, &mut buf);
+    rasterize_treemap(
+        &layout,
+        story.focal.as_deref(),
+        &story.palette_map,
+        &mut buf,
+    );
 
     // Graphics path: emit PNG and skip text composition.
     let protocol = resolve_graphics(&opts.graphics, caps);
@@ -97,7 +102,12 @@ pub fn render_treemap(df: &DataFrame, opts: &TreeOptions) -> Result<String> {
             let label_end_cell = label_start_cell + label.chars().count();
             // Walk the rendered line cell-by-cell; replace cells in [label_start, label_end)
             // with white text on top of the existing background.
-            out.push_str(&overlay_label(line, label_start_cell, label_end_cell, &label));
+            out.push_str(&overlay_label(
+                line,
+                label_start_cell,
+                label_end_cell,
+                &label,
+            ));
         } else {
             out.push_str(line);
         }
