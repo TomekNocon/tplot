@@ -284,6 +284,9 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             };
             crate::commands::render_candlestick(&parsed.dataframe, &opts)
         }
+        ChartKind::Treemap => {
+            Err(anyhow!("treemap JSON dispatch lands in plan 10 task 8"))
+        }
     }
 }
 
