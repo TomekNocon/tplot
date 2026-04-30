@@ -17,3 +17,6 @@ pub use stats::{FiveNumberSummary, five_number_summary, quantile};
 
 pub mod squarify;
 pub use squarify::{Rect, squarify};
+
+pub mod kde;
+pub use kde::{kde_at, kde_evaluate, silverman_bandwidth};
