@@ -9,3 +9,4 @@ repository.workspace   = true
 tplot-protocol = { workspace = true }
 tplot-core     = { workspace = true }
 crossterm      = { workspace = true }
+thiserror      = { workspace = true }

@@ -11,3 +11,5 @@ pub use vertical_blocks::render_vertical_blocks;
 
 pub mod braille;
 pub use braille::render_braille;
+
+pub mod probe;
