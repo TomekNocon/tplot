@@ -6,10 +6,15 @@
 //! the I/O scaffolding.
 use anyhow::{Result, anyhow};
 use std::io::{self, Read};
+use std::time::Duration;
 use tplot_core::{
     dataframe::DataFrame,
     input::{parse_csv_str, parse_json_str},
 };
+use tplot_protocol::Capabilities;
+use tplot_render::probe::{da1, kitty};
+
+const PROBE_TIMEOUT: Duration = Duration::from_millis(80);
 
 pub fn read_dataframe(path: &str) -> Result<DataFrame> {
     let raw = if path == "-" {
@@ -46,6 +51,44 @@ pub fn require_minimum_width(width_override: Option<usize>) -> Result<(usize, us
         ));
     }
     Ok((w_actual, (h as usize).max(8)))
+}
+
+/// Probe the live terminal and return a `Capabilities` that combines env
+/// detection with OSC probe results. Always restores the terminal mode.
+pub fn probe_capabilities() -> Capabilities {
+    let env = Capabilities::from_vars(|name| std::env::var(name).ok());
+
+    // Skip probing if not on a TTY (e.g., piped output, CI).
+    if !is_tty() {
+        return env;
+    }
+
+    // Enable raw mode; whether or not it succeeded, we'll always try to
+    // disable it before returning.
+    let raw_was_enabled = crossterm::terminal::enable_raw_mode().is_ok();
+
+    let result = run_probes();
+
+    if raw_was_enabled {
+        let _ = crossterm::terminal::disable_raw_mode();
+    }
+
+    let (kitty_ok, sixel_ok) = result.unwrap_or((false, false));
+    env.with_probe_results(kitty_ok, sixel_ok)
+}
+
+fn is_tty() -> bool {
+    use std::io::IsTerminal;
+    std::io::stdout().is_terminal() && std::io::stdin().is_terminal()
+}
+
+fn run_probes() -> Option<(bool, bool)> {
+    let mut stdout = std::io::stdout();
+    let mut stdin = std::io::stdin();
+    // Each probe is independent; both run with the same timeout budget.
+    let kitty_ok = kitty::probe_kitty(&mut stdout, &mut stdin, PROBE_TIMEOUT).unwrap_or(false);
+    let sixel_ok = da1::probe_sixel(&mut stdout, &mut stdin, PROBE_TIMEOUT).unwrap_or(false);
+    Some((kitty_ok, sixel_ok))
 }
 
 #[cfg(test)]
