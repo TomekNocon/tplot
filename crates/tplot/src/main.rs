@@ -179,6 +179,11 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
+        Command::Doctor => {
+            let report = commands::doctor::run()?;
+            print!("{report}");
+            Ok(())
+        }
         Command::Json => {
             use std::io::Read;
             let mut buf = String::new();

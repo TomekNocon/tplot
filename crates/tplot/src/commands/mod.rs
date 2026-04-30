@@ -24,3 +24,5 @@ pub use stacked_area::{AreaOptions, render_stacked_area};
 
 pub mod json;
 pub use json::render_from_json;
+
+pub mod doctor;

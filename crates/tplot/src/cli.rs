@@ -32,6 +32,8 @@ pub enum Command {
     /// Render a stacked-area chart. Each group fills from the cumulative
     /// baseline up to its cumulative top, in first-seen order.
     Area(AreaArgs),
+    /// Probe the terminal and print a capability report.
+    Doctor,
     /// Read a JSON ChartSpec from stdin and render it.
     Json,
 }
@@ -374,6 +376,12 @@ mod tests {
             }
             _ => panic!("expected Area"),
         }
+    }
+
+    #[test]
+    fn parses_doctor_subcommand() {
+        let args = Cli::parse_from(["tplot", "doctor"]);
+        assert!(matches!(args.command, Command::Doctor));
     }
 
     #[test]
