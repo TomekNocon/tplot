@@ -101,6 +101,33 @@ impl Capabilities {
             theme,
         }
     }
+
+    /// Merge probe results into env-detected capabilities.
+    /// Probes promote the graphics_protocol upward; they don't demote.
+    /// Priority order (highest first): Kitty, iTerm2, Sixel, None.
+    pub fn with_probe_results(mut self, kitty: bool, sixel: bool) -> Self {
+        let env_priority = priority(self.graphics_protocol);
+        let probe_protocol = if kitty {
+            GraphicsProtocol::Kitty
+        } else if sixel {
+            GraphicsProtocol::Sixel
+        } else {
+            GraphicsProtocol::None
+        };
+        if priority(probe_protocol) > env_priority {
+            self.graphics_protocol = probe_protocol;
+        }
+        self
+    }
+}
+
+fn priority(p: GraphicsProtocol) -> u8 {
+    match p {
+        GraphicsProtocol::Kitty => 3,
+        GraphicsProtocol::ITerm2 => 2,
+        GraphicsProtocol::Sixel => 1,
+        GraphicsProtocol::None => 0,
+    }
 }
 
 fn detect_theme<F>(get: &F) -> Theme
@@ -208,5 +235,37 @@ mod tests {
             _ => None,
         });
         assert_eq!(c.theme, Theme::Dark);
+    }
+
+    #[test]
+    fn probe_promotes_graphics_protocol_when_env_unknown() {
+        let env_caps = Capabilities::from_vars(|name| match name {
+            "TERM" => Some("xterm-256color".into()),
+            _ => None,
+        });
+        assert_eq!(env_caps.graphics_protocol, GraphicsProtocol::None);
+
+        let with_probe = env_caps.with_probe_results(true, false);
+        assert_eq!(with_probe.graphics_protocol, GraphicsProtocol::Kitty);
+    }
+
+    #[test]
+    fn probe_falls_back_to_sixel_when_only_sixel_works() {
+        let env_caps = Capabilities::conservative();
+        let with_probe = env_caps.with_probe_results(false, true);
+        assert_eq!(with_probe.graphics_protocol, GraphicsProtocol::Sixel);
+    }
+
+    #[test]
+    fn probe_does_not_demote_existing_iterm2_detection() {
+        let env_caps = Capabilities::from_vars(|name| match name {
+            "TERM_PROGRAM" => Some("iTerm.app".into()),
+            _ => None,
+        });
+        assert_eq!(env_caps.graphics_protocol, GraphicsProtocol::ITerm2);
+
+        // Sixel probe says false; iTerm2 was already detected. Keep iTerm2.
+        let with_probe = env_caps.with_probe_results(false, false);
+        assert_eq!(with_probe.graphics_protocol, GraphicsProtocol::ITerm2);
     }
 }
