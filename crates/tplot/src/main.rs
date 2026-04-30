@@ -1,15 +1,13 @@
-mod cli;
-mod commands;
-mod pipeline;
-
 use anyhow::Result;
 use clap::Parser;
-use cli::{Cli, Command};
-use commands::{
+use tplot::cli::{Cli, Command};
+use tplot::commands;
+use tplot::commands::{
     AreaOptions, BoxOptions, HeatmapOptions, HistogramOptions, LineOptions, RenderOptions,
     ScatterOptions, render_bar, render_boxplot, render_heatmap, render_histogram, render_line,
     render_scatter, render_stacked_area,
 };
+use tplot::pipeline;
 
 fn main() -> Result<()> {
     let args = Cli::parse();

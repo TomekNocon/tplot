@@ -1,4 +1,4 @@
-use super::{query, ProbeError};
+use super::{ProbeError, query};
 use std::io::{Read, Write};
 use std::time::Duration;
 

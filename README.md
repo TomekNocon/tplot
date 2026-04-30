@@ -4,7 +4,7 @@ Storytelling-first chart engine for the terminal — Rust, fast, opinionated by 
 
 > *"Plotly's quality, Cole Knaflic's discipline, in your terminal."*
 
-## What's in this version (Plans 1 + 2 + 3 + 4 + 4.5 + 5 + 5.5)
+## What's in this version (Plans 1 + 2 + 3 + 4 + 4.5 + 5 + 5.5 + 6 + 7)
 
 - Nine chart types: horizontal bar, vertical bar, histogram, line, scatter, sparkline, heatmap, box plot, stacked area.
 - Renderers:
@@ -13,8 +13,9 @@ Storytelling-first chart engine for the terminal — Rust, fast, opinionated by 
   - Braille (2×4 dots/cell) for line and scatter
 - Story-pass with chart-specific focal detection (max-value for bars, modal-bin for histograms, largest-delta for lines, point-count for scatter, hottest cell for heatmaps, widest-IQR for box plots, largest-total for stacked area), gray-down palette, and embedded takeaway lines. Trust-score gate refuses to highlight when no series clearly dominates. Sparklines stay deliberately minimal — single colored line, no story overhead.
 - CLI: `tplot bar [--vertical]`, `tplot hist`, `tplot line`, `tplot scatter`, `tplot spark`, `tplot heatmap`, `tplot box`, `tplot area`, `tplot json` (stdin).
+- `tplot doctor` — prints a capability report (color depth, glyph set, theme, graphics-protocol detection). Run it once to see how `tplot` views your terminal.
 
-`--graphics` image-protocol output and full capability detection ship in a later plan.
+`--graphics` image-protocol output ships in a later plan; `tplot doctor` already detects which protocol your terminal supports via OSC probes.
 
 ## Install
 
@@ -105,6 +106,29 @@ echo "month,rev,region
 ```
 
 The series with the largest total contribution is highlighted; the takeaway names its share of the cumulative total.
+
+```bash
+# Inspect what tplot detected about your terminal
+$ tplot doctor
+TerminalPlot — terminal diagnostic
+==================================
+
+Environment
+  TERM         = xterm-256color
+  TERM_PROGRAM = iTerm.app
+  COLORTERM    = truecolor
+  COLORFGBG    = (unset)
+
+Detected capabilities
+  Color depth       : truecolor (24-bit RGB)
+  Glyph set         : Octants + Braille + half-blocks (full set)
+  Theme             : dark
+  Graphics protocol : Kitty
+
+Recommendations
+  • Run with --graphics for high-fidelity image-protocol rendering
+    (planned in Plan 7b — pipes a PNG to Kitty escapes).
+```
 
 ## Flags
 

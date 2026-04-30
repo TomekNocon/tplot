@@ -4,18 +4,32 @@ use tplot_protocol::{Capabilities, ColorDepth, GlyphSet, GraphicsProtocol, Theme
 
 pub fn run() -> Result<String> {
     let caps = crate::pipeline::probe_capabilities();
-    Ok(format_report(&caps))
+    Ok(format_report_with_env(&caps, |name| {
+        std::env::var(name).ok()
+    }))
 }
 
+/// Format a capability report using the live process environment for the
+/// "Environment" section. Snapshot-friendly callers should use
+/// [`format_report_with_env`] with a controlled getter instead.
 pub fn format_report(caps: &Capabilities) -> String {
+    format_report_with_env(caps, |name| std::env::var(name).ok())
+}
+
+/// Same as [`format_report`] but takes a getter so tests can supply a
+/// deterministic environment without touching `std::env`.
+pub fn format_report_with_env<F>(caps: &Capabilities, get_env: F) -> String
+where
+    F: Fn(&str) -> Option<String>,
+{
     let mut out = String::with_capacity(512);
     let _ = writeln!(out, "TerminalPlot — terminal diagnostic");
     let _ = writeln!(out, "==================================");
 
-    let term = std::env::var("TERM").unwrap_or_default();
-    let term_program = std::env::var("TERM_PROGRAM").unwrap_or_default();
-    let colorterm = std::env::var("COLORTERM").unwrap_or_default();
-    let colorfgbg = std::env::var("COLORFGBG").unwrap_or_default();
+    let term = get_env("TERM").unwrap_or_default();
+    let term_program = get_env("TERM_PROGRAM").unwrap_or_default();
+    let colorterm = get_env("COLORTERM").unwrap_or_default();
+    let colorfgbg = get_env("COLORFGBG").unwrap_or_default();
 
     let _ = writeln!(out);
     let _ = writeln!(out, "Environment");

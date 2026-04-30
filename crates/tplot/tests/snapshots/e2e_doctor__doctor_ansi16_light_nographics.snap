@@ -1,0 +1,23 @@
+---
+source: crates/tplot/tests/e2e_doctor.rs
+assertion_line: 41
+expression: "format_report_with_env(&caps, empty_env)"
+---
+TerminalPlot — terminal diagnostic
+==================================
+
+Environment
+  TERM         = (unset)
+  TERM_PROGRAM = (unset)
+  COLORTERM    = (unset)
+  COLORFGBG    = (unset)
+
+Detected capabilities
+  Color depth       : ANSI 16-color
+  Glyph set         : half-blocks (▀▄█)
+  Theme             : light
+  Graphics protocol : none
+
+Recommendations
+  • Text rendering only — no graphics-protocol output is supported.
+  • Color depth is limited; the storytelling palette will degrade gracefully.
