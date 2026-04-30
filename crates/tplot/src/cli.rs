@@ -484,15 +484,7 @@ mod tests {
 
     #[test]
     fn parses_violin_subcommand() {
-        let args = Cli::parse_from([
-            "tplot",
-            "violin",
-            "data.csv",
-            "-x",
-            "endpoint",
-            "-y",
-            "ms",
-        ]);
+        let args = Cli::parse_from(["tplot", "violin", "data.csv", "-x", "endpoint", "-y", "ms"]);
         match args.command {
             Command::Violin(v) => {
                 assert_eq!(v.input, "data.csv");

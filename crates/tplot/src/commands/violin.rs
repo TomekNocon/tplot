@@ -54,7 +54,12 @@ pub fn render_violin(df: &DataFrame, opts: &ViolinOptions) -> Result<String> {
 
     // Rasterize.
     let mut buf = PixelBuffer::new(layout.plot_box.pixel_width, layout.plot_box.pixel_height);
-    rasterize_violin(&layout, story.focal.as_deref(), &story.palette_map, &mut buf);
+    rasterize_violin(
+        &layout,
+        story.focal.as_deref(),
+        &story.palette_map,
+        &mut buf,
+    );
 
     // Graphics path: emit PNG, skip text composition.
     let protocol = resolve_graphics(&opts.graphics, caps);
@@ -99,7 +104,10 @@ pub fn render_violin(df: &DataFrame, opts: &ViolinOptions) -> Result<String> {
     x_axis.push_str(&" ".repeat(leading));
     for (idx, v) in layout.violins.iter().enumerate() {
         let trimmed: String = v.label.chars().take(group_w).collect();
-        let pad_left = layout.bar_cell_width.saturating_sub(trimmed.chars().count()) / 2;
+        let pad_left = layout
+            .bar_cell_width
+            .saturating_sub(trimmed.chars().count())
+            / 2;
         let pad_right = layout
             .bar_cell_width
             .saturating_sub(trimmed.chars().count() + pad_left);

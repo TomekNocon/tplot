@@ -1,0 +1,28 @@
+---
+source: crates/tplot/tests/e2e_violin.rs
+expression: strip_ansi(&out)
+---
+  314                         █            █                          
+                              █            █                          
+                              █            █                          
+                              █            █                          
+                              █            █                          
+                              █           ▄█▄                         
+                              █           ███                         
+                              █           ███                         
+                              █           ███                         
+                              █           ███                         
+  155                         █           ███                         
+                              █           ███                         
+                              █           ███                         
+                              █           ███                         
+                              █           ▀▀▀                         
+                              █           ███                         
+                             ▄█▄          ███                         
+                         ▀▀▀▀▀▀▀▀▀▀▀      ███                         
+                              █           ███                         
+                              █           ███                         
+   -4                         █           ███                         
+                           /short        /long   
+
+       /long has the widest spread — IQR 122 (range 10–300, total 290).

@@ -6,7 +6,7 @@ Storytelling-first chart engine for the terminal — Rust, fast, opinionated by 
 
 ## What's in this version (Plans 1 + 2 + 3 + 4 + 4.5 + 5 + 5.5 + 6 + 7 + 7b + 9 + 10)
 
-- Eleven chart types: horizontal bar, vertical bar, histogram, line, scatter, sparkline, heatmap, box plot, stacked area, candlestick, treemap.
+- Twelve chart types: horizontal bar, vertical bar, histogram, line, scatter, sparkline, heatmap, box plot, stacked area, candlestick, treemap, violin.
 - Renderers:
   - half-blocks (truecolor + 256/16/mono fallback) for horizontal bars, heatmaps, box plots, and stacked area
   - vertical-block elements `▁▂▃▄▅▆▇█` for vertical bars, histograms, and sparklines
@@ -129,6 +129,20 @@ AMZN,6" | tplot tree - -x asset -y weight
 ```
 
 The largest holding is highlighted as the focal rectangle in burnt orange; remaining holdings render in gray. Big enough rectangles show their label inline; a legend lists every leaf with its value.
+
+```bash
+# Violin plot — distribution shape per group
+echo "endpoint,ms
+/users,48
+/users,50
+/users,52
+/orders,30
+/orders,80
+/orders,250
+/orders,400" | tplot violin - -x endpoint -y ms
+```
+
+Each violin's mirrored shape traces the kernel density estimate of the values in that group; the horizontal white line marks the median. The group with the widest IQR is highlighted in burnt orange (same focal heuristic as the box plot).
 
 ```bash
 # Inspect what tplot detected about your terminal

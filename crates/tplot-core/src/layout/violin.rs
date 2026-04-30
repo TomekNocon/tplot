@@ -227,8 +227,7 @@ mod tests {
             Column::new(
                 "ms",
                 Series::Numbers(vec![
-                    48.0, 50.0, 51.0, 52.0, 53.0, 10.0, 30.0, 80.0, 150.0, 300.0, 250.0, 60.0,
-                    90.0,
+                    48.0, 50.0, 51.0, 52.0, 53.0, 10.0, 30.0, 80.0, 150.0, 300.0, 250.0, 60.0, 90.0,
                 ]),
             ),
         ])
@@ -244,11 +243,7 @@ mod tests {
     #[test]
     fn long_violin_has_wider_max_half_width() {
         let layout = layout_violin(&skewed_df(), "endpoint", "ms", 80, 16).unwrap();
-        let short = layout
-            .violins
-            .iter()
-            .find(|v| v.label == "/short")
-            .unwrap();
+        let short = layout.violins.iter().find(|v| v.label == "/short").unwrap();
         let long = layout.violins.iter().find(|v| v.label == "/long").unwrap();
         // /short is concentrated → densities at the peak are very high but only
         // over a narrow y-range. /long is spread over a wider y-range. After
@@ -262,11 +257,7 @@ mod tests {
     #[test]
     fn medians_match_data() {
         let layout = layout_violin(&skewed_df(), "endpoint", "ms", 80, 16).unwrap();
-        let short = layout
-            .violins
-            .iter()
-            .find(|v| v.label == "/short")
-            .unwrap();
+        let short = layout.violins.iter().find(|v| v.label == "/short").unwrap();
         // /short median = 51 (5 sorted values: 48, 50, 51, 52, 53)
         assert!((short.summary.median - 51.0).abs() < 0.01);
     }
