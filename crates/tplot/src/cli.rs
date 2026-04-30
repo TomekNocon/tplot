@@ -40,6 +40,8 @@ pub enum Command {
     Violin(ViolinArgs),
     /// Ridgeline (joy-plot) chart — stacked KDEs per group along a categorical axis.
     Ridge(RidgeArgs),
+    /// Sankey diagram — flow between named nodes.
+    Sankey(SankeyArgs),
     /// Probe the terminal and print a capability report.
     Doctor,
     /// Read a JSON ChartSpec from stdin and render it.
@@ -241,6 +243,23 @@ pub struct RidgeArgs {
     /// Categorical column whose unique values become the stacked rows.
     #[arg(long)]
     pub group: String,
+    #[command(flatten)]
+    pub common: CommonStoryArgs,
+}
+
+#[derive(Args, Debug)]
+pub struct SankeyArgs {
+    /// Path to CSV or JSON input. Use `-` for stdin.
+    pub input: String,
+    /// Column with the source node name.
+    #[arg(long)]
+    pub source: String,
+    /// Column with the target node name.
+    #[arg(long)]
+    pub target: String,
+    /// Numeric column with the flow value.
+    #[arg(long)]
+    pub value: String,
     #[command(flatten)]
     pub common: CommonStoryArgs,
 }
@@ -521,6 +540,30 @@ mod tests {
                 assert_eq!(r.group, "month");
             }
             _ => panic!("expected Ridge"),
+        }
+    }
+
+    #[test]
+    fn parses_sankey_subcommand() {
+        let args = Cli::parse_from([
+            "tplot",
+            "sankey",
+            "flows.csv",
+            "--source",
+            "src",
+            "--target",
+            "tgt",
+            "--value",
+            "flow",
+        ]);
+        match args.command {
+            Command::Sankey(s) => {
+                assert_eq!(s.input, "flows.csv");
+                assert_eq!(s.source, "src");
+                assert_eq!(s.target, "tgt");
+                assert_eq!(s.value, "flow");
+            }
+            _ => panic!("expected Sankey"),
         }
     }
 
