@@ -42,6 +42,13 @@ pub enum ChartKind {
     /// Ridgeline (joy-plot) chart — stacked KDEs per group along a categorical
     /// y-axis, each ridge a filled curve over a shared x-axis.
     Ridgeline,
+    /// Sankey diagram — flow between named nodes. Each row in the data is
+    /// one edge: `(source, target, value)`.
+    Sankey {
+        source: String,
+        target: String,
+        value: String,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -243,6 +250,24 @@ mod tests {
             x: Axis::Column("value".into()),
             y: Axis::Column("__count__".into()),
             group: Some("category".into()),
+            title: None,
+            story: StoryConfig::default(),
+        };
+        let json = serde_json::to_string(&spec).unwrap();
+        assert_eq!(serde_json::from_str::<ChartSpec>(&json).unwrap(), spec);
+    }
+
+    #[test]
+    fn sankey_spec_round_trip() {
+        let spec = ChartSpec {
+            kind: ChartKind::Sankey {
+                source: "src".into(),
+                target: "tgt".into(),
+                value: "flow".into(),
+            },
+            x: Axis::Column("__node__".into()),
+            y: Axis::Column("__flow__".into()),
+            group: None,
             title: None,
             story: StoryConfig::default(),
         };

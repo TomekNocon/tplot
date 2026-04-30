@@ -362,6 +362,7 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             };
             crate::commands::render_ridgeline(&parsed.dataframe, &opts)
         }
+        ChartKind::Sankey { .. } => Err(anyhow!("sankey JSON dispatch lands in plan 12 task 7")),
     }
 }
 
