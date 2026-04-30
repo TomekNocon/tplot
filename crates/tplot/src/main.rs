@@ -157,6 +157,9 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
+        Command::Area(_) => {
+            anyhow::bail!("stacked-area dispatch lands in plan 5.5 task 7")
+        }
         Command::Json => {
             use std::io::Read;
             let mut buf = String::new();

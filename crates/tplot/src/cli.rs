@@ -29,6 +29,9 @@ pub enum Command {
     /// Render a vertical box plot — one column per group of the `x` column,
     /// 5-number summary of the `y` column.
     Box(BoxArgs),
+    /// Render a stacked-area chart. Each group fills from the cumulative
+    /// baseline up to its cumulative top, in first-seen order.
+    Area(AreaArgs),
     /// Read a JSON ChartSpec from stdin and render it.
     Json,
 }
@@ -146,6 +149,23 @@ pub struct BoxArgs {
     /// Numeric column for the value distribution.
     #[arg(short = 'y')]
     pub y: String,
+    #[command(flatten)]
+    pub common: CommonStoryArgs,
+}
+
+#[derive(Args, Debug)]
+pub struct AreaArgs {
+    /// Path to CSV or JSON input. Use `-` for stdin.
+    pub input: String,
+    /// Numeric x-axis column (typically time).
+    #[arg(short = 'x')]
+    pub x: String,
+    /// Numeric y-axis column (the values to stack).
+    #[arg(short = 'y')]
+    pub y: String,
+    /// Required: column whose unique values form the stacked series.
+    #[arg(long)]
+    pub group: String,
     #[command(flatten)]
     pub common: CommonStoryArgs,
 }
@@ -329,6 +349,30 @@ mod tests {
                 assert_eq!(b.y, "latency_ms");
             }
             _ => panic!("expected Box"),
+        }
+    }
+
+    #[test]
+    fn parses_area_subcommand() {
+        let args = Cli::parse_from([
+            "tplot",
+            "area",
+            "metrics.csv",
+            "-x",
+            "month",
+            "-y",
+            "revenue",
+            "--group",
+            "region",
+        ]);
+        match args.command {
+            Command::Area(a) => {
+                assert_eq!(a.input, "metrics.csv");
+                assert_eq!(a.x, "month");
+                assert_eq!(a.y, "revenue");
+                assert_eq!(a.group, "region");
+            }
+            _ => panic!("expected Area"),
         }
     }
 
