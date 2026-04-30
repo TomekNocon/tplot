@@ -266,6 +266,28 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
+        Command::Sankey(s) => {
+            let df = pipeline::read_dataframe(&s.input)?;
+            let (_, height) = pipeline::detected_terminal_size(s.common.width);
+            let out = commands::render_sankey(
+                &df,
+                &commands::SankeyOptions {
+                    source: s.source,
+                    target: s.target,
+                    value: s.value,
+                    focus: s.common.focus,
+                    annotate: s.common.annotate,
+                    neutral: s.common.neutral,
+                    no_takeaway: s.common.no_takeaway,
+                    graphics: s.common.graphics,
+                    width: s.common.width,
+                    height,
+                    palette_name: s.common.palette,
+                },
+            )?;
+            print!("{out}");
+            Ok(())
+        }
         Command::Doctor => {
             let report = commands::doctor::run()?;
             print!("{report}");

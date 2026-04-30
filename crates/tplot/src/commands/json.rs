@@ -1,8 +1,8 @@
 use crate::commands::{
     AreaOptions, BoxOptions, CandleOptions, HeatmapOptions, HistogramOptions, LineOptions,
-    RenderOptions, RidgeOptions, ScatterOptions, SparkOptions, TreeOptions, ViolinOptions,
-    render_bar, render_boxplot, render_heatmap, render_histogram, render_line, render_scatter,
-    render_stacked_area,
+    RenderOptions, RidgeOptions, SankeyOptions, ScatterOptions, SparkOptions, TreeOptions,
+    ViolinOptions, render_bar, render_boxplot, render_heatmap, render_histogram, render_line,
+    render_scatter, render_stacked_area,
 };
 use anyhow::{Result, anyhow};
 use tplot_core::input::parse_json_str;
@@ -362,7 +362,29 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             };
             crate::commands::render_ridgeline(&parsed.dataframe, &opts)
         }
-        ChartKind::Sankey { .. } => Err(anyhow!("sankey JSON dispatch lands in plan 12 task 7")),
+        ChartKind::Sankey {
+            source,
+            target,
+            value,
+        } => {
+            let opts = SankeyOptions {
+                source,
+                target,
+                value,
+                focus: match spec.story.focus {
+                    tplot_protocol::FocusMode::Series(s) => Some(s),
+                    _ => None,
+                },
+                annotate: spec.story.annotation,
+                neutral: !spec.story.enabled,
+                no_takeaway: !spec.story.takeaway,
+                graphics: "none".into(),
+                width: Some(canvas_w),
+                height: canvas_h,
+                palette_name: "signature".into(),
+            };
+            crate::commands::render_sankey(&parsed.dataframe, &opts)
+        }
     }
 }
 

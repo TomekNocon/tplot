@@ -26,10 +26,10 @@ pub fn rasterize_sankey(
         }
         paint_edge(e, palette, buf);
     }
-    if let Some(name) = focal {
-        if let Some(e) = layout.edges.iter().find(|e| e.label == name) {
-            paint_edge(e, palette, buf);
-        }
+    if let Some(name) = focal
+        && let Some(e) = layout.edges.iter().find(|e| e.label == name)
+    {
+        paint_edge(e, palette, buf);
     }
     // 2. Paint nodes on top (so edge tips are tucked under the node rectangles).
     for n in &layout.nodes {
