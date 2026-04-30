@@ -410,7 +410,13 @@ mod tests {
     #[test]
     fn graphics_flag_defaults_to_none() {
         let args = Cli::parse_from([
-            "tplot", "bar", "sales.csv", "-x", "quarter", "-y", "revenue",
+            "tplot",
+            "bar",
+            "sales.csv",
+            "-x",
+            "quarter",
+            "-y",
+            "revenue",
         ]);
         match args.command {
             Command::Bar(b) => assert_eq!(b.common.graphics, "none"),

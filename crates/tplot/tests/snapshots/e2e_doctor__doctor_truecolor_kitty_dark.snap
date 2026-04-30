@@ -19,5 +19,5 @@ Detected capabilities
   Graphics protocol : Kitty
 
 Recommendations
-  • Run with --graphics for high-fidelity image-protocol rendering
-    (planned in Plan 7b — pipes a PNG to Kitty escapes).
+  • Run with --graphics auto for high-fidelity image rendering
+    (encodes a PNG and emits Kitty escapes).

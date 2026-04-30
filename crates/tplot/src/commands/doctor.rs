@@ -95,11 +95,11 @@ where
     } else {
         let _ = writeln!(
             out,
-            "  • Run with --graphics for high-fidelity image-protocol rendering"
+            "  • Run with --graphics auto for high-fidelity image rendering"
         );
         let _ = writeln!(
             out,
-            "    (planned in Plan 7b — pipes a PNG to {} escapes).",
+            "    (encodes a PNG and emits {} escapes).",
             graphics_label(caps.graphics_protocol)
         );
     }
