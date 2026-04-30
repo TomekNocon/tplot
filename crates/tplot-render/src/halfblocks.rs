@@ -56,7 +56,7 @@ fn _typecheck(_: RgbColor) {} // keep RgbColor import live for future variants
 mod tests {
     use super::*;
     use tplot_core::PixelBuffer;
-    use tplot_protocol::{Capabilities, ColorDepth, GlyphSet, GraphicsProtocol, RgbColor};
+    use tplot_protocol::{Capabilities, ColorDepth, GlyphSet, GraphicsProtocol, RgbColor, Theme};
 
     const ORANGE: RgbColor = RgbColor {
         r: 0xee,
@@ -69,6 +69,7 @@ mod tests {
             color_depth: ColorDepth::Truecolor,
             glyph_set: GlyphSet::HalfBlocks,
             graphics_protocol: GraphicsProtocol::None,
+            theme: Theme::Dark,
         }
     }
 

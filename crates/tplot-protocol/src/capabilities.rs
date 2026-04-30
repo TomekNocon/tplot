@@ -28,11 +28,20 @@ pub enum GraphicsProtocol {
     Sixel,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum Theme {
+    #[default]
+    Dark,
+    Light,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Capabilities {
     pub color_depth: ColorDepth,
     pub glyph_set: GlyphSet,
     pub graphics_protocol: GraphicsProtocol,
+    pub theme: Theme,
 }
 
 impl Capabilities {
@@ -41,6 +50,7 @@ impl Capabilities {
             color_depth: ColorDepth::Ansi256,
             glyph_set: GlyphSet::HalfBlocks,
             graphics_protocol: GraphicsProtocol::None,
+            theme: Theme::Dark,
         }
     }
 
@@ -82,12 +92,39 @@ impl Capabilities {
             GraphicsProtocol::None
         };
 
+        let theme = detect_theme(&get);
+
         Self {
             color_depth,
             glyph_set,
             graphics_protocol,
+            theme,
         }
     }
+}
+
+fn detect_theme<F>(get: &F) -> Theme
+where
+    F: Fn(&str) -> Option<String>,
+{
+    // 1. $COLORFGBG = "fg;bg" or "fg;default;bg". A bg digit ≥ 7 (light gray
+    //    or white) is a light terminal; ≤ 6 is dark.
+    if let Some(raw) = get("COLORFGBG") {
+        let parts: Vec<&str> = raw.split(';').collect();
+        if parts.len() >= 2 {
+            if let Some(bg_str) = parts.last() {
+                if let Ok(bg) = bg_str.trim().parse::<u8>() {
+                    return if bg >= 7 { Theme::Light } else { Theme::Dark };
+                }
+            }
+        }
+    }
+    // 2. Apple Terminal defaults to a light theme.
+    if get("TERM_PROGRAM").as_deref() == Some("Apple_Terminal") {
+        return Theme::Light;
+    }
+    // 3. Default to Dark for everything else (most modern dev terminals).
+    Theme::Dark
 }
 
 #[cfg(test)]
@@ -120,5 +157,57 @@ mod tests {
             _ => None,
         });
         assert_eq!(c.graphics_protocol, GraphicsProtocol::Kitty);
+    }
+
+    #[test]
+    fn theme_default_is_dark() {
+        let c = Capabilities::conservative();
+        assert_eq!(c.theme, Theme::Dark);
+    }
+
+    #[test]
+    fn theme_dark_when_colorfgbg_says_dark_bg() {
+        // $COLORFGBG="15;0" means fg=white(15), bg=black(0).
+        let c = Capabilities::from_vars(|name| match name {
+            "COLORFGBG" => Some("15;0".into()),
+            _ => None,
+        });
+        assert_eq!(c.theme, Theme::Dark);
+    }
+
+    #[test]
+    fn theme_light_when_colorfgbg_says_light_bg() {
+        // $COLORFGBG="0;15" means fg=black, bg=white(15).
+        let c = Capabilities::from_vars(|name| match name {
+            "COLORFGBG" => Some("0;15".into()),
+            _ => None,
+        });
+        assert_eq!(c.theme, Theme::Light);
+    }
+
+    #[test]
+    fn theme_apple_terminal_default_inferred_light() {
+        // Apple Terminal defaults to a light theme out of the box.
+        let c = Capabilities::from_vars(|name| match name {
+            "TERM_PROGRAM" => Some("Apple_Terminal".into()),
+            _ => None,
+        });
+        assert_eq!(c.theme, Theme::Light);
+    }
+
+    #[test]
+    fn theme_falls_back_to_dark_for_unknown_terminal() {
+        let c = Capabilities::from_vars(|_| None);
+        assert_eq!(c.theme, Theme::Dark);
+    }
+
+    #[test]
+    fn theme_falls_back_to_dark_for_malformed_colorfgbg() {
+        // Single segment — no bg piece. Fall through to default.
+        let c = Capabilities::from_vars(|name| match name {
+            "COLORFGBG" => Some("15".into()),
+            _ => None,
+        });
+        assert_eq!(c.theme, Theme::Dark);
     }
 }

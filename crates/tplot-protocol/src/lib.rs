@@ -7,7 +7,7 @@ pub mod palette;
 pub use palette::Palette;
 
 pub mod capabilities;
-pub use capabilities::{Capabilities, ColorDepth, GlyphSet, GraphicsProtocol};
+pub use capabilities::{Capabilities, ColorDepth, GlyphSet, GraphicsProtocol, Theme};
 
 pub mod chart;
 pub mod story;
