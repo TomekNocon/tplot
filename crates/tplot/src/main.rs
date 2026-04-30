@@ -245,9 +245,26 @@ fn main() -> Result<()> {
             print!("{out}");
             Ok(())
         }
-        Command::Ridge(_r) => {
-            // Wired in plan 11.5 task 6.
-            anyhow::bail!("ridge command not yet wired");
+        Command::Ridge(r) => {
+            let df = pipeline::read_dataframe(&r.input)?;
+            let (_, height) = pipeline::detected_terminal_size(r.common.width);
+            let out = commands::render_ridgeline(
+                &df,
+                &commands::RidgeOptions {
+                    x: r.x,
+                    group: r.group,
+                    focus: r.common.focus,
+                    annotate: r.common.annotate,
+                    neutral: r.common.neutral,
+                    no_takeaway: r.common.no_takeaway,
+                    graphics: r.common.graphics,
+                    width: r.common.width,
+                    height,
+                    palette_name: r.common.palette,
+                },
+            )?;
+            print!("{out}");
+            Ok(())
         }
         Command::Doctor => {
             let report = commands::doctor::run()?;

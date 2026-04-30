@@ -1,7 +1,7 @@
 use crate::commands::{
     AreaOptions, BoxOptions, CandleOptions, HeatmapOptions, HistogramOptions, LineOptions,
-    RenderOptions, ScatterOptions, SparkOptions, TreeOptions, ViolinOptions, render_bar,
-    render_boxplot, render_heatmap, render_histogram, render_line, render_scatter,
+    RenderOptions, RidgeOptions, ScatterOptions, SparkOptions, TreeOptions, ViolinOptions,
+    render_bar, render_boxplot, render_heatmap, render_histogram, render_line, render_scatter,
     render_stacked_area,
 };
 use anyhow::{Result, anyhow};
@@ -337,7 +337,31 @@ pub fn render_from_json(json: &str, canvas_w: usize, canvas_h: usize) -> Result<
             };
             crate::commands::render_violin(&parsed.dataframe, &opts)
         }
-        ChartKind::Ridgeline => Err(anyhow!("ridgeline JSON dispatch lands in plan 11.5 task 6")),
+        ChartKind::Ridgeline => {
+            let x = match spec.x {
+                Axis::Column(c) => c,
+                _ => return Err(anyhow!("inline x axis not supported in v1")),
+            };
+            let group = spec
+                .group
+                .ok_or_else(|| anyhow!("ridgeline requires a `group` column"))?;
+            let opts = RidgeOptions {
+                x,
+                group,
+                focus: match spec.story.focus {
+                    tplot_protocol::FocusMode::Series(s) => Some(s),
+                    _ => None,
+                },
+                annotate: spec.story.annotation,
+                neutral: !spec.story.enabled,
+                no_takeaway: !spec.story.takeaway,
+                graphics: "none".into(),
+                width: Some(canvas_w),
+                height: canvas_h,
+                palette_name: "signature".into(),
+            };
+            crate::commands::render_ridgeline(&parsed.dataframe, &opts)
+        }
     }
 }
 
