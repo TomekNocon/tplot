@@ -100,4 +100,23 @@ mod tests {
         let s = render_halfblocks(&buf, caps());
         assert!(s.contains('\u{2588}'));
     }
+
+    #[test]
+    fn output_size_for_typical_row_is_compact() {
+        // 60 same-color cells should produce <= 300 bytes (vs ~1500 before).
+        let mut buf = PixelBuffer::new(60, 2);
+        for x in 0..60 {
+            buf.set(
+                x,
+                0,
+                RgbColor {
+                    r: 0xee,
+                    g: 0x7b,
+                    b: 0x3d,
+                },
+            );
+        }
+        let out = render_halfblocks(&buf, caps());
+        assert!(out.len() < 300, "output too long: {} bytes", out.len());
+    }
 }
