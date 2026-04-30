@@ -24,3 +24,6 @@ pub use candlestick::rasterize_candlestick;
 
 pub mod treemap;
 pub use treemap::rasterize_treemap;
+
+pub mod violin;
+pub use violin::rasterize_violin;
