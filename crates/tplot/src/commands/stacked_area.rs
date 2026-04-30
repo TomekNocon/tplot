@@ -6,7 +6,7 @@ use tplot_core::layout::layout_stacked_area;
 use tplot_core::rasterize::rasterize_stacked_area;
 use tplot_protocol::{Capabilities, FocusMode, Palette, StoryConfig};
 use tplot_render::render_halfblocks;
-use tplot_story::{focal::SeriesTotal, run_stacked_area_story_pass, stacked_area_takeaway};
+use tplot_story::{focal::SeriesTotal, run_stacked_area_story_pass_with_theme, stacked_area_takeaway};
 
 #[derive(Debug, Clone)]
 pub struct AreaOptions {
@@ -50,14 +50,14 @@ pub fn render_stacked_area(df: &DataFrame, opts: &AreaOptions) -> Result<String>
             .unwrap_or(FocusMode::Auto),
         annotation: opts.annotate.clone(),
     };
-    let story = run_stacked_area_story_pass(&totals, &story_cfg, palette);
+    let caps = Capabilities::from_vars(|name| std::env::var(name).ok());
+    let story = run_stacked_area_story_pass_with_theme(&totals, &story_cfg, palette, caps.theme);
 
     // ----- rasterize -------------------------------------------------------
     let mut buf = PixelBuffer::new(layout.plot_box.pixel_width, layout.plot_box.pixel_height);
     rasterize_stacked_area(&layout, &story.palette_map, &mut buf);
 
     // ----- render ----------------------------------------------------------
-    let caps = Capabilities::from_vars(|name| std::env::var(name).ok());
     let body = render_halfblocks(&buf, caps);
     let body_lines: Vec<&str> = body.lines().collect();
 

@@ -6,7 +6,7 @@ use tplot_core::layout::{layout_horizontal_bar, layout_vertical_bar};
 use tplot_core::rasterize::{rasterize_bar, rasterize_vertical};
 use tplot_protocol::{Capabilities, FocusMode, Palette, StoryConfig};
 use tplot_render::{render_halfblocks, render_vertical_blocks};
-use tplot_story::{SeriesPoint, run_bar_story_pass};
+use tplot_story::{SeriesPoint, run_bar_story_pass_with_theme};
 
 #[derive(Debug, Clone)]
 pub struct RenderOptions {
@@ -71,7 +71,8 @@ pub fn render_bar(df: &DataFrame, opts: &RenderOptions) -> Result<String> {
         },
         annotation: opts.annotate.clone(),
     };
-    let story = run_bar_story_pass(&series_points, &story_cfg, palette);
+    let caps = Capabilities::from_vars(|name| std::env::var(name).ok());
+    let story = run_bar_story_pass_with_theme(&series_points, &story_cfg, palette, caps.theme);
 
     // ----- layout ----------------------------------------------------------
     let (canvas_w, _) = detected_terminal_size(opts.width);
@@ -97,7 +98,6 @@ pub fn render_bar(df: &DataFrame, opts: &RenderOptions) -> Result<String> {
     rasterize_bar(&layout, &story.palette_map, &mut buf);
 
     // ----- render to halfblocks (one cell row per source cell row) ---------
-    let caps = Capabilities::from_vars(|name| std::env::var(name).ok());
     let body = render_halfblocks(&buf, caps);
     let bar_rows: Vec<&str> = body.lines().collect();
 
@@ -194,7 +194,8 @@ fn render_vertical_bar(df: &DataFrame, opts: &RenderOptions) -> Result<String> {
         },
         annotation: opts.annotate.clone(),
     };
-    let story = run_bar_story_pass(&series_points, &story_cfg, palette);
+    let caps = Capabilities::from_vars(|name| std::env::var(name).ok());
+    let story = run_bar_story_pass_with_theme(&series_points, &story_cfg, palette, caps.theme);
 
     // ----- layout ----------------------------------------------------------
     let (canvas_w, _) = detected_terminal_size(opts.width);
@@ -218,7 +219,6 @@ fn render_vertical_bar(df: &DataFrame, opts: &RenderOptions) -> Result<String> {
     rasterize_vertical(&layout, &story.palette_map, &mut buf);
 
     // ----- render to vertical-blocks ---------------------------------------
-    let caps = Capabilities::from_vars(|name| std::env::var(name).ok());
     let body = render_vertical_blocks(&buf, caps);
     let body_lines: Vec<&str> = body.lines().collect();
 
@@ -348,6 +348,26 @@ mod tests {
             out.contains('\u{2588}') || out.contains('\u{2587}') || out.contains('\u{2585}'),
             "no lower-block glyphs in vertical bar output"
         );
+    }
+
+    #[test]
+    fn theme_aware_pipeline_runs_without_panic() {
+        let csv = "region,revenue\nNA,100\nEMEA,200\n";
+        let df = parse_csv_str(csv).unwrap();
+        let opts = RenderOptions {
+            x: "region".into(),
+            y: "revenue".into(),
+            group: None,
+            vertical: false,
+            focus: None,
+            annotate: None,
+            neutral: false,
+            no_takeaway: false,
+            width: Some(60),
+            height: 8,
+            palette_name: "signature".into(),
+        };
+        let _ = render_bar(&df, &opts).expect("should render successfully under any theme");
     }
 
     #[test]

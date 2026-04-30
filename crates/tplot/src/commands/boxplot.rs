@@ -6,7 +6,7 @@ use tplot_core::layout::layout_boxplot;
 use tplot_core::rasterize::rasterize_boxplot;
 use tplot_protocol::{Capabilities, FocusMode, Palette, StoryConfig};
 use tplot_render::render_halfblocks;
-use tplot_story::{boxplot_takeaway, focal::SeriesSpread, run_boxplot_story_pass};
+use tplot_story::{boxplot_takeaway, focal::SeriesSpread, run_boxplot_story_pass_with_theme};
 
 #[derive(Debug, Clone)]
 pub struct BoxOptions {
@@ -49,7 +49,8 @@ pub fn render_boxplot(df: &DataFrame, opts: &BoxOptions) -> Result<String> {
             .unwrap_or(FocusMode::Auto),
         annotation: opts.annotate.clone(),
     };
-    let story = run_boxplot_story_pass(&spreads, &story_cfg, palette);
+    let caps = Capabilities::from_vars(|name| std::env::var(name).ok());
+    let story = run_boxplot_story_pass_with_theme(&spreads, &story_cfg, palette, caps.theme);
 
     // ----- rasterize -------------------------------------------------------
     let mut buf = PixelBuffer::new(layout.plot_box.pixel_width, layout.plot_box.pixel_height);
@@ -61,7 +62,6 @@ pub fn render_boxplot(df: &DataFrame, opts: &BoxOptions) -> Result<String> {
     );
 
     // ----- render ----------------------------------------------------------
-    let caps = Capabilities::from_vars(|name| std::env::var(name).ok());
     let body = render_halfblocks(&buf, caps);
     let body_lines: Vec<&str> = body.lines().collect();
 

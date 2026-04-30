@@ -6,7 +6,7 @@ use tplot_core::layout::layout_line;
 use tplot_core::rasterize::rasterize_line;
 use tplot_protocol::{Capabilities, FocusMode, Palette, StoryConfig};
 use tplot_render::render_braille;
-use tplot_story::{SeriesTrend, run_line_story_pass};
+use tplot_story::{SeriesTrend, run_line_story_pass_with_theme};
 
 #[derive(Debug, Clone)]
 pub struct LineOptions {
@@ -64,7 +64,8 @@ pub fn render_line(df: &DataFrame, opts: &LineOptions) -> Result<String> {
         },
         annotation: opts.annotate.clone(),
     };
-    let story = run_line_story_pass(&trends, &story_cfg, palette);
+    let caps = Capabilities::from_vars(|name| std::env::var(name).ok());
+    let story = run_line_story_pass_with_theme(&trends, &story_cfg, palette, caps.theme);
 
     // ----- rasterize -------------------------------------------------------
     let mut buf = PixelBuffer::new(layout.plot_box.pixel_width, layout.plot_box.pixel_height);
@@ -76,7 +77,6 @@ pub fn render_line(df: &DataFrame, opts: &LineOptions) -> Result<String> {
     );
 
     // ----- render with Braille ---------------------------------------------
-    let caps = Capabilities::from_vars(|name| std::env::var(name).ok());
     let body = render_braille(&buf, caps);
     let body_lines: Vec<&str> = body.lines().collect();
 

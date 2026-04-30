@@ -6,7 +6,7 @@ use tplot_core::layout::layout_histogram;
 use tplot_core::rasterize::rasterize_vertical;
 use tplot_protocol::{Capabilities, FocusMode, Palette, StoryConfig};
 use tplot_render::render_vertical_blocks;
-use tplot_story::{SeriesPoint, run_histogram_story_pass};
+use tplot_story::{SeriesPoint, run_histogram_story_pass_with_theme};
 
 #[derive(Debug, Clone)]
 pub struct HistogramOptions {
@@ -50,7 +50,8 @@ pub fn render_histogram(df: &DataFrame, opts: &HistogramOptions) -> Result<Strin
         },
         annotation: opts.annotate.clone(),
     };
-    let story = run_histogram_story_pass(&bins_as_points, &story_cfg, palette);
+    let caps = Capabilities::from_vars(|name| std::env::var(name).ok());
+    let story = run_histogram_story_pass_with_theme(&bins_as_points, &story_cfg, palette, caps.theme);
 
     // Rasterize.
     let mut buf = PixelBuffer::new(
@@ -60,7 +61,6 @@ pub fn render_histogram(df: &DataFrame, opts: &HistogramOptions) -> Result<Strin
     rasterize_vertical(&hist.bars, &story.palette_map, &mut buf);
 
     // Render via vertical-block glyphs.
-    let caps = Capabilities::from_vars(|name| std::env::var(name).ok());
     let body = render_vertical_blocks(&buf, caps);
     let body_lines: Vec<&str> = body.lines().collect();
 

@@ -6,7 +6,7 @@ use tplot_core::layout::layout_scatter;
 use tplot_core::rasterize::rasterize_scatter;
 use tplot_protocol::{Capabilities, FocusMode, Palette, StoryConfig};
 use tplot_render::render_braille;
-use tplot_story::{SeriesPoint, run_bar_story_pass};
+use tplot_story::{SeriesPoint, run_bar_story_pass_with_theme};
 
 #[derive(Debug, Clone)]
 pub struct ScatterOptions {
@@ -55,7 +55,8 @@ pub fn render_scatter(df: &DataFrame, opts: &ScatterOptions) -> Result<String> {
         },
         annotation: opts.annotate.clone(),
     };
-    let story = run_bar_story_pass(&counts, &story_cfg, palette);
+    let caps = Capabilities::from_vars(|name| std::env::var(name).ok());
+    let story = run_bar_story_pass_with_theme(&counts, &story_cfg, palette, caps.theme);
 
     let mut buf = PixelBuffer::new(layout.plot_box.pixel_width, layout.plot_box.pixel_height);
     rasterize_scatter(
@@ -65,7 +66,6 @@ pub fn render_scatter(df: &DataFrame, opts: &ScatterOptions) -> Result<String> {
         &mut buf,
     );
 
-    let caps = Capabilities::from_vars(|name| std::env::var(name).ok());
     let body = render_braille(&buf, caps);
     let body_lines: Vec<&str> = body.lines().collect();
 
