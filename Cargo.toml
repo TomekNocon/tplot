@@ -9,10 +9,16 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.0"
-edition = "2024"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/TomekNocon/tplot"
+version     = "0.1.0"
+edition     = "2024"
+license     = "MIT OR Apache-2.0"
+repository  = "https://github.com/TomekNocon/tplot"
+homepage    = "https://github.com/TomekNocon/tplot"
+description = "Storytelling-first terminal data visualization."
+readme      = "README.md"
+keywords    = ["chart", "plot", "cli", "terminal", "data"]
+categories  = ["command-line-utilities", "visualization"]
+authors     = ["Tomek Nocon <tomek.lm10@gmail.com>"]
 
 [workspace.dependencies]
 tplot-protocol = { path = "crates/tplot-protocol", version = "0.1.0" }
