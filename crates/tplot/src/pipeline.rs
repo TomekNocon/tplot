@@ -11,7 +11,7 @@ use tplot_core::{
     dataframe::DataFrame,
     input::{parse_csv_str, parse_json_str},
 };
-use tplot_protocol::Capabilities;
+use tplot_protocol::{Capabilities, GraphicsProtocol};
 use tplot_render::probe::{da1, kitty};
 
 const PROBE_TIMEOUT: Duration = Duration::from_millis(80);
@@ -82,6 +82,23 @@ fn is_tty() -> bool {
     std::io::stdout().is_terminal() && std::io::stdin().is_terminal()
 }
 
+/// Translate the `--graphics` CLI flag into a [`GraphicsProtocol`].
+///
+/// - `"auto"`         → use `caps.graphics_protocol` (env + probe-detected).
+/// - `"kitty"`        → force Kitty (trust the user even if probing said no).
+/// - `"iterm2"`       → force iTerm2.
+/// - `"none"` / empty → `GraphicsProtocol::None` (text rendering).
+/// - anything else    → `GraphicsProtocol::None` (don't crash).
+pub fn resolve_graphics(flag: &str, caps: Capabilities) -> GraphicsProtocol {
+    match flag {
+        "auto" => caps.graphics_protocol,
+        "kitty" => GraphicsProtocol::Kitty,
+        "iterm2" => GraphicsProtocol::ITerm2,
+        "none" | "" => GraphicsProtocol::None,
+        _ => GraphicsProtocol::None,
+    }
+}
+
 fn run_probes() -> Option<(bool, bool)> {
     let mut stdout = std::io::stdout();
     let mut stdin = std::io::stdin();
@@ -94,6 +111,16 @@ fn run_probes() -> Option<(bool, bool)> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tplot_protocol::{Capabilities, ColorDepth, GlyphSet, GraphicsProtocol, Theme};
+
+    fn caps_with(g: GraphicsProtocol) -> Capabilities {
+        Capabilities {
+            color_depth: ColorDepth::Truecolor,
+            glyph_set: GlyphSet::Octants,
+            graphics_protocol: g,
+            theme: Theme::Dark,
+        }
+    }
 
     #[test]
     fn rejects_below_minimum_width() {
@@ -104,5 +131,45 @@ mod tests {
     #[test]
     fn accepts_exactly_minimum_width() {
         assert!(require_minimum_width(Some(40)).is_ok());
+    }
+
+    #[test]
+    fn resolve_none_returns_none() {
+        assert_eq!(
+            resolve_graphics("none", caps_with(GraphicsProtocol::Kitty)),
+            GraphicsProtocol::None
+        );
+    }
+
+    #[test]
+    fn resolve_kitty_forces_kitty() {
+        assert_eq!(
+            resolve_graphics("kitty", caps_with(GraphicsProtocol::None)),
+            GraphicsProtocol::Kitty
+        );
+    }
+
+    #[test]
+    fn resolve_iterm2_forces_iterm2() {
+        assert_eq!(
+            resolve_graphics("iterm2", caps_with(GraphicsProtocol::None)),
+            GraphicsProtocol::ITerm2
+        );
+    }
+
+    #[test]
+    fn resolve_auto_uses_caps() {
+        assert_eq!(
+            resolve_graphics("auto", caps_with(GraphicsProtocol::Kitty)),
+            GraphicsProtocol::Kitty
+        );
+        assert_eq!(
+            resolve_graphics("auto", caps_with(GraphicsProtocol::ITerm2)),
+            GraphicsProtocol::ITerm2
+        );
+        assert_eq!(
+            resolve_graphics("auto", caps_with(GraphicsProtocol::None)),
+            GraphicsProtocol::None
+        );
     }
 }
