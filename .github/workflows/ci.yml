@@ -11,9 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy, rustfmt
+      - name: Install Rust (per rust-toolchain.toml)
+        run: |
+          rustup toolchain install --no-self-update
+          rustc --version
       - uses: Swatinem/rust-cache@v2
       - name: cargo test
         run: cargo test --workspace --all-targets
