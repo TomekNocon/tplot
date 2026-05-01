@@ -17,6 +17,11 @@ jobs:
           rustc --version
       - uses: Swatinem/rust-cache@v2
       - name: cargo test
+        env:
+          # Tests assume truecolor capability for ANSI assertions.
+          # CI runners have no TTY, so we set this explicitly.
+          COLORTERM: truecolor
+          TERM: xterm-256color
         run: cargo test --workspace --all-targets
       - name: cargo clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
