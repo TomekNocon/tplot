@@ -9,6 +9,14 @@ minor versions.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-05-02
+
+### Added
+
+- Homebrew formula auto-published to `tomeknocon/homebrew-tap` on each
+  release. Install via `brew install tomeknocon/tap/tplot` (or the
+  shorter `brew install tplot` after a one-time `brew tap tomeknocon/tap`).
+
 ## [0.1.0] - 2026-05-01
 
 ### Added
@@ -32,5 +40,6 @@ minor versions.
 - Three palettes: `signature`, `editorial`, `colorblind-safe`.
 - 348 tests across the 5-crate workspace.
 
-[Unreleased]: https://github.com/TomekNocon/tplot/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/TomekNocon/tplot/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/TomekNocon/tplot/releases/tag/v0.1.1
 [0.1.0]: https://github.com/TomekNocon/tplot/releases/tag/v0.1.0
