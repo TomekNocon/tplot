@@ -18,14 +18,32 @@ Storytelling-first chart engine for the terminal — Rust, fast, opinionated by 
 
 ## Install
 
-### One-liner (recommended)
+### Homebrew (macOS)
+
+```bash
+brew install tomeknocon/tap/tplot
+```
+
+Or as a tap-and-install:
+
+```bash
+brew tap tomeknocon/tap
+brew install tplot
+```
+
+Updates: `brew upgrade tplot`. The formula is auto-published from each
+release; you'll see new versions after the next `brew update`.
+
+### One-liner (curl, macOS + Linux)
 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf \
   https://github.com/TomekNocon/tplot/releases/latest/download/tplot-installer.sh | sh
 ```
 
-This grabs the right prebuilt binary for your platform, drops it on your `PATH`, and is what most users want.
+This grabs the right prebuilt binary for your platform, drops it on
+your `PATH`, and is the fastest install on Linux. On macOS, prefer
+Homebrew above unless you have a reason not to.
 
 ### Manual download
 
@@ -43,7 +61,7 @@ curl -L https://github.com/TomekNocon/tplot/releases/latest/download/tplot-aarch
 sudo mv tplot /usr/local/bin/
 ```
 
-Verify checksums against `SHA256SUMS` published with each release.
+Verify checksums against the per-archive `*.sha256` files published with each release.
 
 ### From source
 
